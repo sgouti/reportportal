@@ -5,9 +5,15 @@ WORKDIR /usr/app
 COPY service-api /usr/app
 RUN sed -i "/alias(libs.plugins.owasp.dependencycheck)/d" build.gradle \
     && sed -i "/alias(libs.plugins.drill.integration)/d" build.gradle \
+    && sed -i "/alias(libs.plugins.openapi.generator)/d" build.gradle \
+    && sed -i "/alias(libs.plugins.jooq.codegen)/d" build.gradle \
     && sed -i "/import org.owasp.dependencycheck.reporting.ReportGenerator/d" build.gradle \
     && sed -i "/^dependencyCheck {$/,/^}$/d" build.gradle \
-    && sed -i "/^drill {$/,/^}$/d" build.gradle
+    && sed -i "/^drill {$/,/^}$/d" build.gradle \
+    && sed -i "/^openApiGenerate {$/,/^}$/d" build.gradle \
+    && sed -i "/jooqCodegen(.*)/d" build.gradle \
+    && sed -i "/compileJava\\.dependsOn tasks.named('openApiGenerate')/d" build.gradle \
+    && sed -i "/compileJava\\.dependsOn tasks.named('downloadManifestSchema')/d" build.gradle
 RUN if [ "${RELEASE_MODE}" = true ]; then \
     gradle build --no-build-cache --exclude-task test \
         -PreleaseMode=true \

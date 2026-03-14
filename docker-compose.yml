@@ -361,7 +361,9 @@ services:
   ##
   ui:
     image: ${UI_IMAGE-reportportal/service-ui:5.15.2}
-    build: ./service-ui
+    build:
+      context: ${UI_BUILD_CONTEXT-./service-ui}
+      dockerfile: ${UI_DOCKERFILE-Dockerfile}
     environment:
       RP_SERVER_PORT: "8080"
     healthcheck:
@@ -400,7 +402,9 @@ services:
   ##
   api:
     image: ${API_IMAGE-reportportal/service-api:5.15.1}
-    build: ./service-api
+    build:
+      context: ${API_BUILD_CONTEXT-./service-api}
+      dockerfile: ${API_DOCKERFILE-Dockerfile}
     logging:
       <<: *logging
     depends_on:

@@ -615,7 +615,11 @@ services:
   ##
   analyzer:
     image: ${ANALYZER_IMAGE-reportportal/service-auto-analyzer:5.15.1}
-    build: ./service-auto-analyzer
+    build:
+      context: ./service-auto-analyzer
+      args:
+        BAKE_MODELS: ${ANALYZER_BAKE_MODELS-false}
+        HF_TOKEN: ${HF_TOKEN-}
     logging:
       <<: *logging
     environment:

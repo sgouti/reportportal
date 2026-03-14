@@ -130,6 +130,8 @@ API_IMAGE=reportportal/service-api:5.14.2 docker-compose up -d
 | `JOBS_IMAGE` | `reportportal/service-jobs:5.14.0` | Jobs service image |
 | `MIGRATIONS_IMAGE` | `reportportal/migrations:5.14.1` | Database migrations |
 | `ANALYZER_IMAGE` | `reportportal/service-auto-analyzer:5.14.2` | Analyzer service |
+| `ANALYZER_BAKE_MODELS` | `false` | Passes `BAKE_MODELS` to the analyzer Docker build so semantic ONNX models can be baked into the image before compose startup |
+| `HF_TOKEN` | empty | Optional Hugging Face token used when `ANALYZER_BAKE_MODELS=true` and the model registry requires authentication |
 | `POSTGRES_USER` | `rpuser` | Database username |
 | `POSTGRES_PASSWORD` | `rppass` | Database password |
 | `POSTGRES_DB` | `reportportal` | Database name |

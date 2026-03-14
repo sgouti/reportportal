@@ -87,6 +87,15 @@ docker compose -p reportportal up -d
 http://IP_ADDRESS:8080
 ```
 
+If you build `service-auto-analyzer` from source and want the semantic analyzer runtime to have local ONNX assets available inside Docker, set `ANALYZER_BAKE_MODELS=true` in `.env` before building. If the target Hugging Face models require authentication, also set `HF_TOKEN`.
+
+```bash
+docker compose build analyzer
+docker compose up -d
+```
+
+If you leave `ANALYZER_BAKE_MODELS=false`, install the model assets separately before starting the analyzer container.
+
 5. Use next login\pass for access:
 
 - `default\1q2w3e`

@@ -1,7 +1,7 @@
 ---
 name: "Analyzer Feature Review"
-description: "Use when reviewing, hardening, or improving ReportPortal analyzer features across service-ui, service-api, service-auto-analyzer, and Docker deployment. Good for analyzer insights, ML suggestions, flakiness, clustering, hybrid retrieval, API contract alignment, and production-readiness work."
-tools: [read, search, edit, execute, todo]
+description: "Use when reviewing, hardening, or improving ReportPortal analyzer features across service-ui, service-api, service-auto-analyzer, Docker deployment, and remote cloud validation. Good for analyzer insights, ML suggestions, flakiness, clustering, hybrid retrieval, API contract alignment, cloud rollout checks, and production-readiness work."
+tools: [read, search, edit, execute, todo,playwright/*]
 argument-hint: "Describe the analyzer feature, current issue, target improvement, and whether the agent should review only or also implement changes."
 user-invocable: true
 ---
@@ -17,12 +17,15 @@ This repository is a multi-service ReportPortal workspace. Relevant areas usuall
 - `service-auto-analyzer` for ML runtime behavior, clustering, flakiness, ranking, and model loading
 - `docker-compose.yml` and docs for deployment correctness
 
+When remote cloud MCP tools are configured in the workspace, treat them as part of the deployment surface for this feature.
+
 ## Core Responsibilities
 
 1. Review the feature across UI, API, analyzer, and Docker boundaries instead of treating one repo in isolation.
 2. Check whether the feature is actually deployable, testable, and backward-compatible.
 3. Fix root causes where possible, not only superficial UI symptoms.
 4. Keep changes minimal, production-oriented, and aligned with existing project patterns.
+5. Use remote cloud MCP tools for cloud-hosted validation when they are available instead of relying only on local Docker state.
 
 ## Constraints
 
@@ -31,6 +34,7 @@ This repository is a multi-service ReportPortal workspace. Relevant areas usuall
 - Do not remove existing compatibility behavior unless you verify the deployment target no longer needs it.
 - Do not make unrelated cleanup changes.
 - Do not treat local development success as sufficient if Docker or service-to-service integration is part of the feature.
+- Do not guess MCP server names or cloud tool capabilities. If remote cloud MCP access is needed but not granted to this agent, say so explicitly.
 
 ## Required Review Focus
 
@@ -66,6 +70,14 @@ Always check these areas when relevant:
 - whether the feature works only in source or also in the Docker stack
 - health checks, smoke tests, and migration or backfill needs
 
+### Remote cloud validation
+
+- container registry image/tag verification
+- remote deployment state and rollout confirmation
+- cloud-hosted service health, logs, and endpoint checks
+- managed dependencies relevant to the feature such as OpenSearch, queues, or storage
+- post-deploy smoke testing in non-local environments
+
 ## Workflow
 
 1. Read the relevant code paths first.
@@ -73,7 +85,8 @@ Always check these areas when relevant:
 3. Identify the highest-value gaps or regressions.
 4. If the prompt requests implementation, make the smallest complete changes needed.
 5. Validate with the most relevant tests or commands available.
-6. Summarize what changed, what remains risky, and what images or repos must be updated for deployment.
+6. Use remote cloud MCP validation when available for deployed environments.
+7. Summarize what changed, what remains risky, and what images or repos must be updated for deployment.
 
 ## Review Standards
 
@@ -102,9 +115,11 @@ When asked to review and implement, return:
 3. How it was validated
 4. What still needs deployment, rebuild, or follow-up
 
+If remote cloud MCP access is unavailable for a requested action, state the missing access clearly and continue with the best local validation path available.
+
 ## Repo-Specific Guidance
 
 - In `service-ui`, follow existing Redux and route registration patterns.
 - In `service-api`, preserve project-scoped authorization and avoid breaking existing clients.
 - In `service-auto-analyzer`, assume model assets may be absent at runtime and verify fallback behavior.
-- In deployment guidance, distinguish clearly between source changes, built images, and compose overrides.
+- In deployment guidance, distinguish clearly between source changes, built images, compose overrides, and remote cloud rollout state.

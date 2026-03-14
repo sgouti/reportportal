@@ -607,11 +607,11 @@ services:
   ## Analyzer services (optional): auto-analysis and ML training
   ##
 
-  ## @param analyzer Automatic test result analyzer
-  ## - Performs log analysis and pattern detection
+  ## @param analyzer Fast automatic test result analyzer
+  ## - Priority 1 analyzer for latency-sensitive defect assignment
+  ## - Uses the same service image with stricter timeout and reduced capabilities
   ## - Relies on OpenSearch and RabbitMQ
   ## - Writes persistent data to shared volume
-  ##
   ##
   analyzer:
     image: ${ANALYZER_IMAGE-reportportal/service-auto-analyzer:5.15.1}
@@ -620,6 +620,52 @@ services:
       <<: *logging
     environment:
       <<: *common-analyzer-environment
+      AMQP_EXCHANGE_NAME: analyzer-fast
+      ANALYZER_PRIORITY: 1
+      ANALYZER_SUGGEST: "false"
+      ANALYZER_CLUSTER: "false"
+      AA_PIPELINE_TIMEOUT_SECONDS: 2
+      AA_RERANK_CANDIDATES: 10
+      AA_RERANK_RESULTS: 5
+    volumes:
+      - storage:/data/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5001 || wget -q --spider http://localhost:5001/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - reportportal
+    restart: always
+    profiles:
+      - ''
+
+  ## @param analyzer-deep Deep semantic analyzer
+  ## - Priority 2 analyzer for unresolved items left by the fast analyzer
+  ## - Enables suggestions and clustering with a larger latency budget
+  ## - Relies on OpenSearch and RabbitMQ
+  ## - Writes persistent data to shared volume
+  ##
+  analyzer-deep:
+    image: ${ANALYZER_IMAGE-reportportal/service-auto-analyzer:5.15.1}
+    build: ./service-auto-analyzer
+    logging:
+      <<: *logging
+    environment:
+      <<: *common-analyzer-environment
+      AMQP_EXCHANGE_NAME: analyzer-deep
+      ANALYZER_PRIORITY: 2
+      ANALYZER_SUGGEST: "true"
+      ANALYZER_CLUSTER: "true"
+      AA_PIPELINE_TIMEOUT_SECONDS: 10
+      AA_RERANK_CANDIDATES: 30
+      AA_RERANK_RESULTS: 10
     volumes:
       - storage:/data/storage
     healthcheck:
@@ -649,6 +695,7 @@ services:
 ##   - uat: stores user-related data
 ##   - jobs: cleans up expired data from api
 ##   - analyzer: stores ML models and analysis data in /data/storage/analyzer subdirectory
+##   - analyzer-deep: shares the same analyzer storage for semantic models and analysis data
 ##
 ## All services must share the same volume for jobs to properly clean storage data.
 ## For custom host path, replace 'storage:' with a bind mount:

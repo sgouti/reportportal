@@ -207,6 +207,7 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: *rabbitmq_user
       RABBITMQ_DEFAULT_PASS: *rabbitmq_password
+      RABBITMQ_VHOSTS: analyzer
       RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS: "true"
       ## Block all procedures when free disk space is less than 50MB
       ## Ref: https://www.rabbitmq.com/docs/disk-alarms
@@ -279,7 +280,7 @@ services:
   ## - Requires database to be healthy
   ##
   migrations:
-    image: ${MIGRATIONS_IMAGE-reportportal/migrations:5.15.1}
+    image: ${MIGRATIONS_IMAGE-reportportal/migrations:5.15.1-local-v3}
     build: ./migrations
     logging:
       <<: *logging
@@ -350,7 +351,7 @@ services:
   ## - Performs healthcheck on port 8080 to verify availability
   ##
   ui:
-    image: ${UI_IMAGE-reportportal/service-ui:5.15.2}
+    image: ${UI_IMAGE-reportportal/service-ui:5.15.2-local-v3}
     build: ./service-ui
     environment:
       RP_SERVER_PORT: "8080"
@@ -389,7 +390,7 @@ services:
   ## - Routed via Traefik under path `/api`
   ##
   api:
-    image: ${API_IMAGE-reportportal/service-api:5.15.1}
+    image: ${API_IMAGE-reportportal/service-api:5.15.1-local-v3}
     build: ./service-api
     logging:
       <<: *logging
@@ -466,7 +467,7 @@ services:
   ## - Routed via Traefik under path `/uat`
   ##
   uat:
-    image: ${UAT_IMAGE-reportportal/service-authorization:5.15.0}
+    image: ${UAT_IMAGE-reportportal/service-authorization:5.15.0-local-v3}
     build: ./service-authorization
     logging:
       <<: *logging
@@ -614,8 +615,12 @@ services:
   ## - Writes persistent data to shared volume
   ##
   analyzer:
-    image: ${ANALYZER_IMAGE-reportportal/service-auto-analyzer:5.15.1}
-    build: ./service-auto-analyzer
+    image: ${ANALYZER_IMAGE-reportportal/service-auto-analyzer:5.15.1-ml-v3}
+    build:
+      context: ./service-auto-analyzer
+      args:
+        BAKE_MODELS: "true"
+        HF_TOKEN: ${HF_TOKEN-}
     logging:
       <<: *logging
     environment:
@@ -624,8 +629,15 @@ services:
       ANALYZER_PRIORITY: 1
       ANALYZER_SUGGEST: "false"
       ANALYZER_CLUSTER: "false"
+      AA_BGE_M3_MODEL_ID: qdrant/bge-small-en-v1.5-onnx-q
+      AA_BGE_RERANKER_MODEL_ID: Xenova/ms-marco-TinyBERT-L-2-v2
+      AA_BGE_M3_MODEL_PATH: res/model/runtime/bge-small-en-v1.5
+      AA_BGE_RERANKER_MODEL_PATH: res/model/runtime/ms-marco-TinyBERT-L-2-v2
+      AA_BGE_M3_MODEL_FILE: model_optimized.onnx
+      AA_BGE_RERANKER_MODEL_FILE: onnx/model.onnx
+      AA_SEMANTIC_VECTOR_DIM: 384
       AA_PIPELINE_TIMEOUT_SECONDS: 2
-      AA_RERANK_CANDIDATES: 10
+      AA_RERANK_CANDIDATES: 5
       AA_RERANK_RESULTS: 5
     volumes:
       - storage:/data/storage
@@ -653,8 +665,12 @@ services:
   ## - Writes persistent data to shared volume
   ##
   analyzer-deep:
-    image: ${ANALYZER_IMAGE-reportportal/service-auto-analyzer:5.15.1}
-    build: ./service-auto-analyzer
+    image: ${ANALYZER_IMAGE-reportportal/service-auto-analyzer:5.15.1-ml-v3}
+    build:
+      context: ./service-auto-analyzer
+      args:
+        BAKE_MODELS: "true"
+        HF_TOKEN: ${HF_TOKEN-}
     logging:
       <<: *logging
     environment:
@@ -663,6 +679,13 @@ services:
       ANALYZER_PRIORITY: 2
       ANALYZER_SUGGEST: "true"
       ANALYZER_CLUSTER: "true"
+      AA_BGE_M3_MODEL_ID: qdrant/bge-small-en-v1.5-onnx-q
+      AA_BGE_RERANKER_MODEL_ID: Xenova/ms-marco-TinyBERT-L-2-v2
+      AA_BGE_M3_MODEL_PATH: res/model/runtime/bge-small-en-v1.5
+      AA_BGE_RERANKER_MODEL_PATH: res/model/runtime/ms-marco-TinyBERT-L-2-v2
+      AA_BGE_M3_MODEL_FILE: model_optimized.onnx
+      AA_BGE_RERANKER_MODEL_FILE: onnx/model.onnx
+      AA_SEMANTIC_VECTOR_DIM: 384
       AA_PIPELINE_TIMEOUT_SECONDS: 10
       AA_RERANK_CANDIDATES: 30
       AA_RERANK_RESULTS: 10

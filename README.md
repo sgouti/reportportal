@@ -94,7 +94,7 @@ docker compose build analyzer
 docker compose up -d
 ```
 
-If you leave `ANALYZER_BAKE_MODELS=false`, install the model assets separately before starting the analyzer container.
+If you leave `ANALYZER_BAKE_MODELS=false`, you must install the model assets separately before starting the analyzer container. Use the `service-auto-analyzer/README.md` runtime asset management instructions for that manual/offline asset workflow.
 
 5. Use next login\pass for access:
 

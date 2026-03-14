@@ -292,16 +292,20 @@ services:
       POSTGRES_DB: *db_name
       POSTGRES_USER: *db_user
       POSTGRES_PASSWORD: *db_password
+      ## golang-migrate accepts a single database URL, so compose derives it here from the
+      ## POSTGRES_SERVER/PORT/DB/USER/PASSWORD variables defined in this service environment.
+      MIGRATION_DATABASE_URL: postgres://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@$${POSTGRES_SERVER}:$${POSTGRES_PORT}/$${POSTGRES_DB}?sslmode=$${POSTGRES_SSLMODE:-disable}
       ## Configure SSL connection to the database
       ## Incoming parameters: require, disable
       # POSTGRES_SSLMODE: disable
+    ## Run migrations directly here because Compose already waits for PostgreSQL health,
+    ## and the image's default wait-for-it.sh entrypoint failed here with repeated
+    ## `nc: bad address 'postgres'` errors.
     entrypoint:
       - /bin/sh
       - -c
       - >
-        migrate -path /migrations -database
-        "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@$$POSTGRES_SERVER:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=$${POSTGRES_SSLMODE:-disable}"
-        up
+        exec migrate -path /migrations -database "$$MIGRATION_DATABASE_URL" up
     networks:
       - reportportal
     restart: on-failure

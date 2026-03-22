@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ReportPortal — QA Intelligence</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#f0f2f5;--s:#fff;--s2:#f7f8fa;--s3:#eef0f3;
+  --b:rgba(0,0,0,0.07);--b2:rgba(0,0,0,0.12);
+  --t1:#0f172a;--t2:#475569;--t3:#94a3b8;
+  --green:#059669;--gbg:#ecfdf5;--gbd:rgba(5,150,105,.2);
+  --red:#dc2626;--rbg:#fef2f2;--rbd:rgba(220,38,38,.2);
+  --amber:#d97706;--abg:#fffbeb;--abd:rgba(217,119,6,.2);
+  --blue:#2563eb;--bbg:#eff6ff;--bbd:rgba(37,99,235,.2);
+  --purple:#7c3aed;--pbg:#f5f3ff;--pbd:rgba(124,58,237,.2);
+  --sb:#12151e;--sbt:rgba(255,255,255,.45);--sborder:rgba(255,255,255,.06);
+  --r:10px;--r2:7px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t1);font-size:13px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+.topbar{height:46px;background:var(--sb);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;border-bottom:1px solid var(--sborder)}
+.t-logo{width:26px;height:26px;background:#e8594a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+.t-name{font-size:13px;font-weight:700;color:#fff}
+.t-div{width:1px;height:16px;background:rgba(255,255,255,.1);margin:0 4px}
+.t-bc{font-size:11px;color:rgba(255,255,255,.4);flex:1}
+.t-bc b{color:rgba(255,255,255,.8);font-weight:500}
+.t-btn{font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.65);cursor:pointer;font-weight:500;transition:.12s}
+.t-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.t-btn.red{background:#e8594a;color:#fff;border-color:#e8594a}
+
+.layout{display:flex;flex:1;overflow:hidden}
+.sb{width:196px;flex-shrink:0;background:var(--sb);display:flex;flex-direction:column;overflow-y:auto;border-right:1px solid var(--sborder)}
+.sb-proj{padding:10px 14px 12px;border-bottom:1px solid var(--sborder);margin-bottom:4px}
+.sb-pl{font-size:8px;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.sb-pn{font-size:12px;color:rgba(255,255,255,.7);font-weight:500}
+.sb-sec{padding:8px 14px 3px;font-size:8px;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:12px;color:var(--sbt);cursor:pointer;border-left:2px solid transparent;transition:.1s;position:relative;user-select:none}
+.ni:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.04)}
+.ni.on{color:#fff;background:rgba(255,255,255,.07);border-left-color:#e8594a}
+.ni-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.ni-new{font-size:8px;font-weight:700;background:#059669;color:#d1fae5;padding:1px 5px;border-radius:8px;margin-left:auto}
+.ni-tip{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);background:#1e293b;color:#e2e8f0;font-size:11px;padding:6px 11px;border-radius:7px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:1000;box-shadow:0 4px 16px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08)}
+.ni-tip::before{content:'';position:absolute;right:100%;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#1e293b}
+.ni:hover .ni-tip{opacity:1}
+
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.pg{display:none;flex:1;overflow-y:auto;padding:20px 22px;flex-direction:column;gap:14px}
+.pg.on{display:flex}
+
+.ph{display:flex;align-items:flex-start;gap:12px;margin-bottom:0}
+.ph-left{flex:1}
+.ph-title{font-size:19px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.ph-sub{font-size:12px;color:var(--t3)}
+.ph-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+.g211{display:grid;grid-template-columns:2.1fr 1.2fr 1.2fr;gap:12px}
+.g13{display:grid;grid-template-columns:1fr 280px;gap:14px}
+.g32{display:grid;grid-template-columns:1.5fr 1fr;gap:12px}
+
+.kpi{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:16px 18px;border-left:3px solid transparent;cursor:pointer;transition:.15s}
+.kpi:hover{box-shadow:0 2px 12px rgba(0,0,0,.08);transform:translateY(-1px)}
+.kpi.static{cursor:default}
+.kpi.static:hover{box-shadow:none;transform:none}
+.kpi-l{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.kpi-v{font-size:28px;font-weight:700;line-height:1;margin-bottom:6px}
+.kpi-sub{font-size:11px;display:flex;align-items:center;gap:4px}
+.kpi-why{font-size:10px;color:var(--t3);margin-top:4px;font-style:italic}
+.up{color:var(--green)}.dn{color:var(--red)}.nt{color:var(--t3)}
+
+.card{background:var(--s);border:1px solid var(--b);border-radius:var(--r);overflow:hidden}
+.ch{padding:12px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:8px}
+.ct{font-size:13px;font-weight:600;color:var(--t1);flex:1}
+.csub{font-size:11px;color:var(--t3)}
+.cb{padding:14px 16px}
+.cft{padding:9px 16px;border-top:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--t3)}
+.clnk{font-size:11px;color:var(--blue);cursor:pointer;font-weight:500}
+.clnk:hover{text-decoration:underline}
+
+.b{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.bg{background:var(--gbg);color:var(--green);border:1px solid var(--gbd)}
+.br{background:var(--rbg);color:var(--red);border:1px solid var(--rbd)}
+.ba{background:var(--abg);color:var(--amber);border:1px solid var(--abd)}
+.bb{background:var(--bbg);color:var(--blue);border:1px solid var(--bbd)}
+.bp{background:var(--pbg);color:var(--purple);border:1px solid var(--pbd)}
+.bk{background:var(--s3);color:var(--t2);border:1px solid var(--b2)}
+
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{font-size:9px;font-weight:700;color:var(--t3);text-align:left;padding:7px 14px;border-bottom:1px solid var(--b);background:var(--s2);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--b);vertical-align:middle;color:var(--t1)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.cl:hover td{background:var(--s2);cursor:pointer}
+
+.prog{height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden}
+.pf{height:100%;border-radius:2px}
+
+.ring-row{display:flex;align-items:center;gap:11px}
+.ri-l{font-size:11px;color:var(--t2);margin-bottom:1px}
+.ri-v{font-size:20px;font-weight:700;line-height:1}
+.ri-s{font-size:10px;margin-top:3px}
+
+.sr2{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--b);font-size:12px}
+.sr2:last-child{border-bottom:none}
+.sr2 .sr-l{color:var(--t2)}.sr2 .sr-v{font-weight:600;color:var(--t1)}
+.sr2 .sr-why{font-size:10px;color:var(--t3);margin-top:1px;font-style:italic}
+
+.als{border-radius:8px;padding:11px 13px;margin-bottom:8px}
+.als:last-child{margin-bottom:0}
+.als.d{background:var(--rbg);border:1px solid var(--rbd)}
+.als.w{background:var(--abg);border:1px solid var(--abd)}
+.als.i{background:var(--bbg);border:1px solid var(--bbd)}
+.als-t{font-size:12px;font-weight:700;margin-bottom:3px}
+.als.d .als-t{color:var(--red)}.als.w .als-t{color:var(--amber)}.als.i .als-t{color:var(--blue)}
+.als-d{font-size:11px;color:var(--t2);line-height:1.5}
+.als-m{font-size:10px;color:var(--t3);margin-top:5px;display:flex;justify-content:space-between}
+
+.ins{border-radius:8px;padding:12px 14px;border-left:3px solid}
+.ins.c{background:var(--rbg);border-left-color:var(--red)}
+.ins.w{background:var(--abg);border-left-color:var(--amber)}
+.ins.i{background:var(--bbg);border-left-color:var(--blue)}
+.ins.g{background:var(--gbg);border-left-color:var(--green)}
+.ins-t{font-size:12px;font-weight:700;margin-bottom:4px}
+.ins.c .ins-t{color:var(--red)}.ins.w .ins-t{color:var(--amber)}
+.ins.i .ins-t{color:var(--blue)}.ins.g .ins-t{color:var(--green)}
+.ins-d{font-size:11px;color:var(--t2);line-height:1.6}
+.ins-d b{color:var(--t1)}
+
+.cl-card{border:1px solid var(--b);border-radius:var(--r);overflow:hidden}
+.cl-head{padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.1s filter}
+.cl-head:hover{filter:brightness(.97)}
+.cl-body{display:none;border-top:1px solid var(--b)}
+.cl-body.open{display:block}
+.cl-letter{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.cl-name{font-size:13px;font-weight:600;color:var(--t1)}
+.cl-meta{font-size:11px;color:var(--t2);margin-top:2px}
+.cl-stat-l{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em}
+.cl-stat-v{font-size:16px;font-weight:700;color:var(--t1)}
+
+.esig{background:var(--s2);border-left:3px solid var(--red);border-radius:0 7px 7px 0;padding:11px 14px;font-family:'SF Mono','Consolas',monospace;font-size:11px}
+.esig-m{color:var(--red);font-weight:700;font-size:12px;margin-bottom:5px}
+.esig-l{color:var(--t2);margin-bottom:8px}
+.esig-diff{display:grid;grid-template-columns:58px 1fr;gap:4px;border-top:1px solid var(--b);padding-top:7px;font-size:11px}
+.esig-k{color:var(--t3)}.esig-ex{color:var(--green);font-weight:700}.esig-ac{color:var(--red);font-weight:700}
+
+.simb{display:flex;align-items:center;gap:8px}
+.simb-track{flex:1;height:5px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.simb-fill{height:100%;border-radius:3px}
+.simb-v{font-size:12px;font-weight:700;min-width:32px;text-align:right}
+
+.pipe{display:flex;align-items:center;overflow-x:auto;gap:0;padding:2px}
+.pb{flex:1;min-width:88px;border:1px solid var(--b2);border-radius:8px;padding:10px 12px;text-align:center;background:var(--s2)}
+.pb.act{background:var(--pbg);border-color:var(--pbd)}
+.pb.out{background:var(--gbg);border-color:var(--gbd)}
+.pb-step{font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:600}
+.pb.act .pb-step{color:var(--purple)}.pb.out .pb-step{color:var(--green)}
+.pb-name{font-size:12px;font-weight:600;color:var(--t1);margin-bottom:2px}
+.pb-det{font-size:10px;color:var(--t2)}
+.parr{padding:0 6px;color:var(--t3);font-size:14px;flex-shrink:0}
+
+.sbox{display:flex;border:1.5px solid var(--b2);border-radius:8px;overflow:hidden;background:var(--s);transition:.15s}
+.sbox:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.sbox input{flex:1;padding:10px 14px;font-size:13px;border:none;background:transparent;color:var(--t1);outline:none}
+.sbox select{padding:0 12px;font-size:11px;border:none;border-left:1px solid var(--b2);background:var(--s2);color:var(--t2);outline:none}
+.sbox button{padding:9px 18px;background:#e8594a;color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer}
+.sres{border:1px solid var(--b);border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:.1s}
+.sres:hover{background:var(--s2)}
+.sres-exc{font-family:monospace;font-size:12px;font-weight:700;color:var(--t1)}
+.sres-m{font-size:11px;color:var(--t2);margin:4px 0}
+.scpill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--bbg);color:var(--blue);border:1px solid var(--bbd)}
+
+.hstep{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--b)}
+.hstep:last-child{border-bottom:none}
+.hnum{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.ht{font-size:12px;font-weight:600;color:var(--t1);margin-bottom:3px}
+.hd{font-size:11px;color:var(--t2);line-height:1.55}
+
+/* Release & Sprint */
+.rc{border:1px solid var(--b);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.rc-h{padding:14px 18px;background:var(--s2);display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid transparent;transition:.1s}
+.rc-h:hover{background:#eef0f3}
+.rc-h.open{border-bottom-color:var(--b)}
+.sp-row{padding:10px 18px 10px 30px;border-top:1px solid var(--b);display:flex;align-items:center;gap:10px;cursor:pointer;transition:.1s}
+.sp-row:hover{background:var(--s2)}
+.sp-lnk{display:none;border-top:1px solid var(--b)}
+.sp-lnk.open{display:block}
+
+/* Sprint / Release create form */
+.form-row{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.form-label{font-size:11px;font-weight:600;color:var(--t1)}
+.form-hint{font-size:10px;color:var(--t3);margin-top:2px}
+.fi{font-size:12px;padding:7px 10px;border:1px solid var(--b2);border-radius:7px;background:var(--s);color:var(--t1);outline:none;width:100%;transition:.15s}
+.fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.date-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.form-btn{padding:8px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:.12s}
+.form-btn.primary{background:#e8594a;color:#fff}
+.form-btn.primary:hover{background:#d44a3b}
+.form-btn.secondary{background:var(--s);color:var(--t1);border:1px solid var(--b2)}
+.form-btn.secondary:hover{background:var(--s2)}
+.sprint-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;background:var(--bbg);color:var(--blue);border:1px solid var(--bbd);margin:3px}
+.sprint-range-preview{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px 12px;margin-top:6px;font-size:11px;color:var(--t2)}
+
+/* Alert rules */
+.rule-c{border:1px solid var(--b);border-radius:var(--r);overflow:hidden;margin-bottom:8px}
+.rule-h{padding:12px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px}
+.rule-f{padding:8px 16px;background:var(--s2);font-size:11px;color:var(--t2);display:flex;gap:6px;align-items:center}
+.tog{width:30px;height:17px;border-radius:9px;position:relative;cursor:pointer;flex-shrink:0;transition:.2s background}
+.tok{width:13px;height:13px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:.2s left;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.tog.on{background:var(--green)}.tog.on .tok{left:15px}
+.tog.off{background:#cbd5e1}.tog.off .tok{left:2px}
+
+.sh-c{border:1px solid var(--b);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.sh-h{padding:10px 14px;background:var(--s2);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--b)}
+.sh-b{padding:10px 14px}
+.sh-url{font-family:monospace;font-size:10px;color:var(--blue);background:var(--bbg);border:1px solid var(--bbd);border-radius:5px;padding:6px 9px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cpb{font-size:10px;padding:2px 7px;border:1px solid var(--b2);border-radius:4px;background:var(--s);color:var(--t2);cursor:pointer;flex-shrink:0;margin-left:8px}
+
+.dh{display:grid;grid-template-columns:1fr 75px 75px 68px 100px;gap:8px;padding:7px 16px;background:var(--s2);border-bottom:1px solid var(--b)}
+.dr2{display:grid;grid-template-columns:1fr 75px 75px 68px 100px;gap:8px;padding:10px 16px;border-bottom:1px solid var(--b);align-items:center;transition:.1s}
+.dr2:last-child{border-bottom:none}.dr2:hover{background:var(--s2)}
+
+.lbl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px}
+.mono{font-family:'SF Mono','Consolas',monospace;font-size:11px}
+.flex{display:flex}.flex-col{flex-direction:column}
+.gap8{gap:8px}.gap10{gap:10px}.gap12{gap:12px}.gap14{gap:14px}
+.mb12{margin-bottom:12px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,.1);border-radius:4px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="t-logo">RP</div>
+  <div class="t-name">ReportPortal</div>
+  <div class="t-div"></div>
+  <div class="t-bc" id="bc">superadmin_personal / <b>Quick summary</b></div>
+  <button class="t-btn">↓ Export</button>
+  <button class="t-btn red">+ New launch</button>
+</div>
+
+<div class="layout">
+<div class="sb">
+  <div class="sb-proj"><div class="sb-pl">Project</div><div class="sb-pn">superadmin_personal</div></div>
+  <div class="sb-sec">Overview</div>
+  <div class="ni on" onclick="go(this,'summary')">
+    <div class="ni-dot" style="background:rgba(255,255,255,.3)"></div>Quick summary
+    <div class="ni-tip">Pass rate · failures · sprint health at a glance</div>
+  </div>
+  <div class="ni" onclick="go(this,'releases')">
+    <div class="ni-dot" style="background:rgba(255,255,255,.3)"></div>Releases
+    <div class="ni-tip">Create releases, configure sprints, drill into launches</div>
+  </div>
+  <div class="sb-sec">Failure analysis</div>
+  <div class="ni" onclick="go(this,'clusters')">
+    <div class="ni-dot" style="background:#e8594a"></div>Cluster view<span class="ni-new">new</span>
+    <div class="ni-tip">Group similar failures — fix 1 root cause, recover many tests</div>
+  </div>
+  <div class="ni" onclick="go(this,'failcard')">
+    <div class="ni-dot" style="background:#e8594a"></div>Failure card<span class="ni-new">new</span>
+    <div class="ni-tip">Deep dive: root line, recurrence history, similar past failures</div>
+  </div>
+  <div class="ni" onclick="go(this,'analyser')">
+    <div class="ni-dot" style="background:var(--purple)"></div>Failure intelligence<span class="ni-new">new</span>
+    <div class="ni-tip">Automated grouping, tagging, and pattern detection</div>
+  </div>
+  <div class="sb-sec">Analytics</div>
+  <div class="ni" onclick="go(this,'flakiness')">
+    <div class="ni-dot" style="background:#059669"></div>Flakiness<span class="ni-new">new</span>
+    <div class="ni-tip">Tests that alternate pass/fail with no code change</div>
+  </div>
+  <div class="ni" onclick="go(this,'trends')">
+    <div class="ni-dot" style="background:#059669"></div>Trends<span class="ni-new">new</span>
+    <div class="ni-tip">Sprint-over-sprint momentum — are you getting better or worse?</div>
+  </div>
+  <div class="ni" onclick="go(this,'duration')">
+    <div class="ni-dot" style="background:#d97706"></div>Duration<span class="ni-new">new</span>
+    <div class="ni-tip">Slowdown detection — tests taking longer than their baseline</div>
+  </div>
+  <div class="sb-sec">Tools</div>
+  <div class="ni" onclick="go(this,'search')">
+    <div class="ni-dot" style="background:var(--purple)"></div>Failure search<span class="ni-new">new</span>
+    <div class="ni-tip">Find similar past failures and how they were fixed</div>
+  </div>
+  <div class="ni" onclick="go(this,'alerts')">
+    <div class="ni-dot" style="background:#d97706"></div>Alerts<span class="ni-new">new</span>
+    <div class="ni-tip">Get notified when quality drops below your thresholds</div>
+  </div>
+  <div class="ni" onclick="go(this,'sharing')">
+    <div class="ni-dot" style="background:rgba(255,255,255,.3)"></div>Sharing<span class="ni-new">new</span>
+    <div class="ni-tip">Read-only public links for stakeholders</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════ QUICK SUMMARY ══════════════════ -->
+<div class="pg on" id="pg-summary">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Quick summary</div><div class="ph-sub">superadmin_personal · updated 17:29 Mar 21 · based on last 5 launches</div></div>
+  </div>
+
+  <div class="g4">
+    <!-- Pass rate — primary health signal. Below 80% = needs investigation -->
+    <div class="kpi" style="border-left-color:var(--green)" onclick="go(document.querySelectorAll('.ni')[6],'trends')" title="Click → Trends">
+      <div class="kpi-l">Pass rate</div>
+      <div class="kpi-v" style="color:var(--green)">69.0%</div>
+      <div class="kpi-sub up"><svg width="9" height="9" viewBox="0 0 9 9"><path d="M4.5 1L8.5 8H.5z" fill="currentColor"/></svg>+13.3% vs previous</div>
+      <div class="kpi-why">Target: &gt;80% · trending up ↑</div>
+    </div>
+    <!-- Open failures — how much triage work is outstanding -->
+    <div class="kpi" style="border-left-color:var(--red)" onclick="go(document.querySelectorAll('.ni')[2],'clusters')" title="Click → Cluster view">
+      <div class="kpi-l">Open failures</div>
+      <div class="kpi-v" style="color:var(--red)">31</div>
+      <div class="kpi-sub dn"><svg width="9" height="9" viewBox="0 0 9 9"><path d="M4.5 8L8.5 1H.5z" fill="currentColor"/></svg>31 new · 0 triaged</div>
+      <div class="kpi-why">All 31 unassigned — need root cause</div>
+    </div>
+    <!-- Flaky tests — hidden reliability debt. Flaky tests waste CI time -->
+    <div class="kpi" style="border-left-color:var(--amber)" onclick="go(document.querySelectorAll('.ni')[5],'flakiness')" title="Click → Flakiness">
+      <div class="kpi-l">Flaky tests</div>
+      <div class="kpi-v">0</div>
+      <div class="kpi-sub nt">Clean — no churn detected</div>
+      <div class="kpi-why">Flaky tests waste CI time without reason</div>
+    </div>
+    <!-- Active sprint context — is there a sprint running right now? -->
+    <div class="kpi static" style="border-left-color:var(--blue)">
+      <div class="kpi-l">Active sprint</div>
+      <div class="kpi-v" style="font-size:16px;margin-top:4px">Unassigned</div>
+      <div class="kpi-sub nt" style="margin-top:4px">5 launches · Mar 21</div>
+      <div class="kpi-why">Assign to a sprint for full tracking</div>
+    </div>
+  </div>
+
+  <div class="g211">
+    <!-- Pass rate trend — 5-launch journey -->
+    <div class="card">
+      <div class="ch">
+        <div class="ct">Pass rate — last 5 launches</div>
+        <span class="b bk">20% sprint avg</span>
+      </div>
+      <div class="cb" style="padding-bottom:10px">
+        <div style="position:relative;height:130px"><canvas id="ch-pass"></canvas></div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:10px;padding-top:10px;border-top:1px solid var(--b)">
+          <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">Demo #1</div><div style="font-size:12px;font-weight:700;color:var(--red)">0%</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">Demo #2</div><div style="font-size:12px;font-weight:700;color:var(--red)">10%</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">Demo #3</div><div style="font-size:12px;font-weight:700;color:var(--amber)">22%</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">Demo #4</div><div style="font-size:12px;font-weight:700;color:var(--amber)">48%</div></div>
+          <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">Demo #5</div><div style="font-size:12px;font-weight:700;color:var(--green)">69%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quality health rings -->
+    <div class="card">
+      <div class="ch"><div class="ct">Quality health</div><div class="csub">this sprint</div></div>
+      <div class="cb flex flex-col gap12">
+        <div class="ring-row">
+          <svg width="50" height="50" viewBox="0 0 50 50"><circle cx="25" cy="25" r="19" fill="none" stroke="#e2e8f0" stroke-width="5"/><circle cx="25" cy="25" r="19" fill="none" stroke="#059669" stroke-width="5" stroke-dasharray="119.4" stroke-dashoffset="36.9" stroke-linecap="round" transform="rotate(-90 25 25)"/></svg>
+          <div><div class="ri-l">Pass rate</div><div class="ri-v" style="color:var(--green)">69%</div><div class="ri-s up">↑ improving</div></div>
+        </div>
+        <div class="ring-row">
+          <svg width="50" height="50" viewBox="0 0 50 50"><circle cx="25" cy="25" r="19" fill="none" stroke="#e2e8f0" stroke-width="5"/><circle cx="25" cy="25" r="19" fill="none" stroke="#cbd5e1" stroke-width="5" stroke-dasharray="119.4" stroke-dashoffset="119.4" stroke-linecap="round" transform="rotate(-90 25 25)"/></svg>
+          <div><div class="ri-l">Flakiness</div><div class="ri-v">0%</div><div class="ri-s nt">Clean</div></div>
+        </div>
+        <div class="ring-row">
+          <svg width="50" height="50" viewBox="0 0 50 50"><circle cx="25" cy="25" r="19" fill="none" stroke="#e2e8f0" stroke-width="5"/><circle cx="25" cy="25" r="19" fill="none" stroke="#dc2626" stroke-width="5" stroke-dasharray="119.4" stroke-dashoffset="82.5" stroke-linecap="round" transform="rotate(-90 25 25)"/></svg>
+          <div><div class="ri-l">Failure rate</div><div class="ri-v" style="color:var(--red)">31%</div><div class="ri-s dn">↓ needs attention</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active sprint stats -->
+    <div class="card">
+      <div class="ch"><div class="ct">Sprint at a glance</div><div class="csub">3.21.11.59.45 · Run 5</div></div>
+      <div class="cb">
+        <div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;font-weight:600">Progress</span><span style="font-size:10px;color:var(--t3)">Mar 21–Mar 21 · done</span></div>
+          <div class="prog"><div class="pf" style="width:100%;background:var(--green)"></div></div>
+        </div>
+        <div style="border-top:1px solid var(--b);padding-top:10px">
+          <div class="sr2"><span class="sr-l">Launches run</span><span class="sr-v">5</span></div>
+          <div class="sr2"><span class="sr-l">Sprint pass rate</span><span class="sr-v" style="color:var(--red)">20%</span></div>
+          <div class="sr2"><span class="sr-l">Total failures</span><span class="sr-v" style="color:var(--red)">31</span></div>
+          <div class="sr2"><span class="sr-l">Defects logged</span><span class="sr-v">51</span></div>
+        </div>
+        <div style="margin-top:12px"><div class="lbl">Sprint trend</div><div style="position:relative;height:48px"><canvas id="ch-sprint"></canvas></div></div>
+      </div>
+      <div class="cft"><span>Unassigned sprint</span><span class="clnk" onclick="go(document.querySelectorAll('.ni')[1],'releases')">Assign to release →</span></div>
+    </div>
+  </div>
+
+  <!-- REPLACED: Latest launches → Top failing suites -->
+  <div class="g21">
+    <div class="card">
+      <div class="ch">
+        <div class="ct">Top failing suites</div>
+        <div class="csub">Where most failures are concentrated</div>
+        <span class="b br">31 total</span>
+      </div>
+      <div class="cb" style="padding:0">
+        <!-- Suite breakdown: shows WHERE to focus investigation effort -->
+        <div style="padding:10px 16px;border-bottom:1px solid var(--b)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span style="font-size:12px;font-weight:600;flex:1">checkout</span>
+            <span style="font-size:12px;font-weight:700;color:var(--red)">14 failures</span>
+            <span style="font-size:11px;color:var(--t3)">45%</span>
+          </div>
+          <div class="prog"><div class="pf" style="width:45%;background:var(--red)"></div></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:3px">All pointing to payment.py — 1 fix likely resolves all 14</div>
+        </div>
+        <div style="padding:10px 16px;border-bottom:1px solid var(--b)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span style="font-size:12px;font-weight:600;flex:1">auth</span>
+            <span style="font-size:12px;font-weight:700;color:var(--amber)">8 failures</span>
+            <span style="font-size:11px;color:var(--t3)">26%</span>
+          </div>
+          <div class="prog"><div class="pf" style="width:26%;background:var(--amber)"></div></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:3px">Locator issues in auth_test.py — automation bug, safe to defer</div>
+        </div>
+        <div style="padding:10px 16px;border-bottom:1px solid var(--b)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span style="font-size:12px;font-weight:600;flex:1">integrations</span>
+            <span style="font-size:12px;font-weight:700;color:var(--amber)">5 failures</span>
+            <span style="font-size:11px;color:var(--t3)">16%</span>
+          </div>
+          <div class="prog"><div class="pf" style="width:16%;background:var(--amber)"></div></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:3px">Novel patterns — webhook and export timeouts, investigate first</div>
+        </div>
+        <div style="padding:10px 16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <span style="font-size:12px;font-weight:600;flex:1">pricing</span>
+            <span style="font-size:12px;font-weight:700;color:var(--blue)">4 failures</span>
+            <span style="font-size:11px;color:var(--t3)">13%</span>
+          </div>
+          <div class="prog"><div class="pf" style="width:13%;background:var(--blue)"></div></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:3px">ValueError on discount logic — first time seen this sprint</div>
+        </div>
+      </div>
+      <div class="cft"><span>4 suites with failures</span><span class="clnk" onclick="go(document.querySelectorAll('.ni')[2],'clusters')">View failure clusters →</span></div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><div class="ct">Active alerts</div><span class="b br">2 fired</span></div>
+      <div class="cb flex flex-col gap8">
+        <div class="als d"><div class="als-t">Pass rate below threshold</div><div class="als-d">70.1% in Demo Api Tests #4 — below your 80% rule. Sprint avg of 20% is also below target.</div><div class="als-m"><span>09:14 today</span><span>#qa-alerts</span></div></div>
+        <div class="als w"><div class="als-t">New failure patterns detected</div><div class="als-d">19 failure patterns have never appeared before in this project. Check recent commits.</div><div class="als-m"><span>09:14 today</span><span>#qa-alerts</span></div></div>
+      </div>
+      <div class="cft"><span>2 rules fired · 4 total active</span><span class="clnk" onclick="go(document.querySelectorAll('.ni')[9],'alerts')">Manage alerts →</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ RELEASES ══════════════════ -->
+<div class="pg" id="pg-releases">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Releases</div><div class="ph-sub">Launches auto-assigned to sprints by created date · sprints grouped into releases</div></div>
+    <div class="ph-right">
+      <button onclick="showModal('sprint-modal')" class="form-btn secondary">+ New sprint</button>
+      <button onclick="showModal('release-modal')" class="form-btn primary">+ New release</button>
+    </div>
+  </div>
+
+  <div style="background:var(--bbg);border:1px solid var(--bbd);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--blue)">
+    <b>How auto-assignment works:</b> When a launch runs, its created date is checked against all sprint date ranges. It's automatically added to the matching sprint. Create sprints with start/end dates first, then launches will self-organise.
+  </div>
+
+  <!-- Unassigned launches warning -->
+  <div class="card">
+    <div class="ch">
+      <div class="ct">Unassigned launches</div>
+      <span class="b ba">5 need a sprint</span>
+    </div>
+    <div class="cb" style="padding:10px 16px">
+      <div style="font-size:12px;color:var(--t2);margin-bottom:10px">These launches were created before any sprint covered their date range. Assign them manually or create a sprint that includes Mar 21.</div>
+      <table class="tbl">
+        <thead><tr><th>Launch</th><th>Created</th><th>Passed</th><th>Failed</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600">Demo Api Tests #5</td><td style="color:var(--t3)">17:29 Mar 21</td><td>30</td><td>0</td><td><button class="form-btn secondary" style="padding:3px 9px;font-size:11px">Assign →</button></td></tr>
+          <tr><td style="font-weight:600">Demo Api Tests #4</td><td style="color:var(--t3)">17:29 Mar 21</td><td>25</td><td style="color:var(--red);font-weight:700">5</td><td><button class="form-btn secondary" style="padding:3px 9px;font-size:11px">Assign →</button></td></tr>
+          <tr><td style="font-weight:600">Demo Api Tests #3</td><td style="color:var(--t3)">17:29 Mar 21</td><td>20</td><td style="color:var(--red);font-weight:700">8</td><td><button class="form-btn secondary" style="padding:3px 9px;font-size:11px">Assign →</button></td></tr>
+          <tr><td style="font-weight:600">Demo Api Tests #2</td><td style="color:var(--t3)">17:29 Mar 21</td><td>15</td><td style="color:var(--red);font-weight:700">9</td><td><button class="form-btn secondary" style="padding:3px 9px;font-size:11px">Assign →</button></td></tr>
+          <tr><td style="font-weight:600">Demo Api Tests #1</td><td style="color:var(--t3)">17:29 Mar 21</td><td>10</td><td style="color:var(--red);font-weight:700">9</td><td><button class="form-btn secondary" style="padding:3px 9px;font-size:11px">Assign →</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Example release (if any existed) -->
+  <div style="text-align:center;padding:32px;background:var(--s);border:1px dashed var(--b2);border-radius:var(--r);color:var(--t3)">
+    <div style="font-size:28px;margin-bottom:10px">📦</div>
+    <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:5px">No releases created yet</div>
+    <div style="font-size:12px;margin-bottom:14px">Create sprints with date ranges first — launches will auto-assign. Then group sprints into a release.</div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button onclick="showModal('sprint-modal')" class="form-btn secondary">Create first sprint</button>
+      <button onclick="showModal('release-modal')" class="form-btn primary">Create release</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ CLUSTER VIEW ══════════════════ -->
+<div class="pg" id="pg-clusters">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-title">Cluster view — Demo Api Tests #4</div>
+      <div class="ph-sub">Failures grouped by shared root cause · fix one root cause, recover multiple tests at once</div>
+    </div>
+  </div>
+
+  <!-- Unique stats: what the clustering achieved, not model details -->
+  <div class="g4">
+    <div class="kpi static" style="border-left-color:var(--red)">
+      <div class="kpi-l">Total failed</div>
+      <div class="kpi-v" style="color:var(--red)">31</div>
+      <div class="kpi-sub nt">in this launch</div>
+      <div class="kpi-why">Starting point for triage work</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--green)">
+      <div class="kpi-l">Failure groups</div>
+      <div class="kpi-v" style="color:var(--green)">2</div>
+      <div class="kpi-sub nt">distinct root causes found</div>
+      <div class="kpi-why">2 fixes could recover 12 tests</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--purple)">
+      <div class="kpi-l">Tests auto-grouped</div>
+      <div class="kpi-v">12</div>
+      <div class="kpi-sub" style="color:var(--purple)">of 31 · saved manual triage</div>
+      <div class="kpi-why">12 tests you don't have to investigate individually</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--amber)">
+      <div class="kpi-l">New patterns</div>
+      <div class="kpi-v" style="color:var(--amber)">19</div>
+      <div class="kpi-sub dn">never seen before in project</div>
+      <div class="kpi-why">High priority — unknown failures need investigation first</div>
+    </div>
+  </div>
+
+  <div class="g3 mb12">
+    <div class="ins c"><div class="ins-t">Fix payment.py:88 → recover 14 tests at once</div><div class="ins-d">All 14 Group A failures share one root cause. One backend fix will recover all 14. The last time this same pattern was fixed, 12 tests recovered in the very next run.</div></div>
+    <div class="ins w"><div class="ins-t">Group B is test code, not a product bug — safe to defer</div><div class="ins-d">8 tests fail because of stale UI locators in auth_test.py. The product is fine — the test code needs updating. Deprioritise from release blockers.</div></div>
+    <div class="ins i"><div class="ins-t">19 new patterns — check recent commits for the cause</div><div class="ins-d">19 failures have no match in project history. This usually means a new code area started failing for the first time. Review commits from the last 24h.</div></div>
+  </div>
+
+  <!-- Group A -->
+  <div class="cl-card mb12">
+    <div class="cl-head" style="background:#fff5f5" onclick="togC('cA','cAa')">
+      <div class="cl-letter" style="background:var(--rbg);color:var(--red)">A</div>
+      <div style="flex:1;min-width:0">
+        <div class="cl-name">AssertionError — payment.py:88 · HTTP 502</div>
+        <div class="cl-meta">14 tests · checkout suite · all hitting the same broken endpoint</div>
+      </div>
+      <div style="text-align:right;margin-right:14px"><div class="cl-stat-l">Tests in group</div><div class="cl-stat-v">14</div></div>
+      <div style="text-align:right;margin-right:14px"><div class="cl-stat-l">Match confidence</div><div class="cl-stat-v" style="color:var(--green)">High</div></div>
+      <span class="b br">Product bug</span>
+      <span id="cAa" style="color:var(--t3);font-size:13px;margin-left:10px">▾</span>
+    </div>
+    <div class="cl-body open" id="cA">
+      <div style="padding:12px 16px;background:#fafafa;border-bottom:1px solid var(--b);display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div class="lbl" style="margin-bottom:8px">Common error signature</div>
+          <div class="esig"><div class="esig-m">AssertionError: Expected 200, got 502</div><div class="esig-l">at checkout/payment.py : line <span style="color:var(--amber);font-weight:700">88</span> &nbsp;<span style="background:var(--abg);color:var(--amber);padding:1px 6px;border-radius:3px;font-size:10px">root cause · 6 internal frames stripped</span></div><div class="esig-diff"><span class="esig-k">Expected</span><span class="esig-ex">HTTP 200</span><span class="esig-k">Actual</span><span class="esig-ac">HTTP 502</span></div></div>
+        </div>
+        <div><div class="lbl" style="margin-bottom:8px">What this means for your team</div><div style="font-size:11px;color:var(--t2);line-height:1.6">The payment service is returning <b>502 Bad Gateway</b> — an upstream service is not responding. All 14 tests hit the same endpoint at payment.py:88. This is a product issue, not a test issue. Check payment processor connectivity and service timeout settings. Once fixed, all 14 tests should pass in the next run.</div></div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Test name</th><th>Duration</th><th>Match confidence</th><th>Root file:line</th><th>Seen before?</th><th>Category</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">test_payment_gateway</td><td>1.2s</td><td><div class="simb"><div class="simb-track"><div class="simb-fill" style="width:97%;background:var(--green)"></div></div><span class="simb-v" style="color:var(--green)">High</span></div></td><td class="mono" style="color:var(--t2)">payment.py:88</td><td><span class="b br">5× this week</span></td><td><span class="b br">Product bug</span></td></tr>
+          <tr><td class="mono">test_refund_flow</td><td>0.9s</td><td><div class="simb"><div class="simb-track"><div class="simb-fill" style="width:94%;background:var(--green)"></div></div><span class="simb-v" style="color:var(--green)">High</span></div></td><td class="mono" style="color:var(--t2)">payment.py:88</td><td><span class="b ba">2× this week</span></td><td><span class="b br">Product bug</span></td></tr>
+          <tr><td class="mono">test_void_transaction</td><td>1.1s</td><td><div class="simb"><div class="simb-track"><div class="simb-fill" style="width:91%;background:var(--green)"></div></div><span class="simb-v" style="color:var(--green)">High</span></div></td><td class="mono" style="color:var(--t2)">payment.py:91</td><td><span class="b bk">First time</span></td><td><span class="b br">Product bug</span></td></tr>
+          <tr><td class="mono">test_payment_retry</td><td>0.8s</td><td><div class="simb"><div class="simb-track"><div class="simb-fill" style="width:89%;background:var(--green)"></div></div><span class="simb-v" style="color:var(--green)">High</span></div></td><td class="mono" style="color:var(--t2)">payment.py:88</td><td><span class="b br">8× this week</span></td><td><span class="b br">Product bug</span></td></tr>
+          <tr><td colspan="6" style="font-size:11px;color:var(--t3);font-style:italic;background:var(--s2)">+10 more tests — same root cause · match confidence: High</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Group B -->
+  <div class="cl-card mb12">
+    <div class="cl-head" style="background:#fffbf0" onclick="togC('cB','cBa')">
+      <div class="cl-letter" style="background:var(--abg);color:var(--amber)">B</div>
+      <div style="flex:1;min-width:0">
+        <div class="cl-name">ElementClickInterceptedException — auth_test.py</div>
+        <div class="cl-meta">8 tests · UI locator failures · stale element selectors</div>
+      </div>
+      <div style="text-align:right;margin-right:14px"><div class="cl-stat-l">Tests in group</div><div class="cl-stat-v">8</div></div>
+      <div style="text-align:right;margin-right:14px"><div class="cl-stat-l">Match confidence</div><div class="cl-stat-v" style="color:var(--green)">High</div></div>
+      <span class="b ba">Automation bug</span>
+      <span id="cBa" style="color:var(--t3);font-size:13px;margin-left:10px">▸</span>
+    </div>
+    <div class="cl-body" id="cB">
+      <div style="padding:12px 16px;background:#fafafa;border-bottom:1px solid var(--b);display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div class="lbl" style="margin-bottom:8px">Common error signature</div><div class="esig" style="border-left-color:var(--amber)"><div class="esig-m" style="color:var(--amber)">ElementClickInterceptedException: element not clickable at (445, 288)</div><div class="esig-l">at tests/auth_test.py : line 55</div></div></div>
+        <div><div class="lbl" style="margin-bottom:8px">What this means</div><div style="font-size:11px;color:var(--t2);line-height:1.6">This is a <b>test code issue, not a product regression</b>. The test is trying to click an element covered by an overlay. The fix is in auth_test.py: add explicit wait conditions or update selectors. <b>Safe to deprioritise</b> from release blockers — the product itself works correctly.</div></div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Test name</th><th>Duration</th><th>Match confidence</th><th>Root file:line</th><th>Seen before?</th><th>Category</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">test_admin_access</td><td>0.4s</td><td><div class="simb"><div class="simb-track"><div class="simb-fill" style="width:93%;background:var(--green)"></div></div><span class="simb-v" style="color:var(--green)">High</span></div></td><td class="mono" style="color:var(--t2)">auth.py:55</td><td><span class="b ba">3× this week</span></td><td><span class="b ba">Automation bug</span></td></tr>
+          <tr><td class="mono">test_role_permissions</td><td>0.6s</td><td><div class="simb"><div class="simb-track"><div class="simb-fill" style="width:89%;background:var(--green)"></div></div><span class="simb-v" style="color:var(--green)">High</span></div></td><td class="mono" style="color:var(--t2)">auth.py:58</td><td><span class="b bk">First time</span></td><td><span class="b ba">Automation bug</span></td></tr>
+          <tr><td colspan="6" style="font-size:11px;color:var(--t3);font-style:italic;background:var(--s2)">+6 more tests — same locator failure pattern</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- New patterns -->
+  <div class="cl-card" style="border-style:dashed">
+    <div class="cl-head" style="background:var(--s2);border-left:3px solid var(--amber)" onclick="togC('cZ','cZa')">
+      <div class="cl-letter" style="background:#f1f5f9;color:var(--t3)">?</div>
+      <div style="flex:1;min-width:0">
+        <div class="cl-name">New patterns — 19 failures never seen before</div>
+        <div class="cl-meta">No match in project history · require manual investigation</div>
+      </div>
+      <div style="text-align:right;margin-right:14px"><div class="cl-stat-l">Tests</div><div class="cl-stat-v">19</div></div>
+      <span class="b ba">To investigate</span>
+      <span id="cZa" style="color:var(--t3);font-size:13px;margin-left:10px">▾</span>
+    </div>
+    <div class="cl-body open" id="cZ">
+      <div style="padding:12px 16px;background:#fffbf5;border-bottom:1px solid var(--b)">
+        <div class="ins w" style="margin-bottom:0"><div class="ins-t">Why are these grouped separately?</div><div class="ins-d">These 19 failures don't match any pattern previously seen in this project. They appear for the first time in this run. <b>Most likely cause:</b> a recent code change introduced new failure modes. Action: cross-reference the commit history from the last 24 hours against the file paths in these failures.</div></div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Test name</th><th>Exception type</th><th>Root file:line</th><th>Message snippet</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">test_export_pdf</td><td>TimeoutError</td><td class="mono" style="color:var(--t2)">export.py:12</td><td style="font-size:11px;color:var(--t2)">operation timed out after 30s</td><td><span class="b ba">High</span></td></tr>
+          <tr><td class="mono">test_webhook_callback</td><td>ConnectionError</td><td class="mono" style="color:var(--t2)">webhook.py:34</td><td style="font-size:11px;color:var(--t2)">connection refused on port 8080</td><td><span class="b br">Critical</span></td></tr>
+          <tr><td class="mono">test_bulk_discount</td><td>ValueError</td><td class="mono" style="color:var(--t2)">pricing.py:77</td><td style="font-size:11px;color:var(--t2)">discount rate cannot exceed 1.0</td><td><span class="b ba">High</span></td></tr>
+          <tr><td colspan="5" style="font-size:11px;color:var(--t3);font-style:italic;background:var(--s2)">+16 more new failures — sorted by exception severity</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ FAILURE CARD ══════════════════ -->
+<div class="pg" id="pg-failcard">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Smart failure card</div><div class="ph-sub">Auto-parsed · root line extracted · recurrence history · similar past failures with resolution</div></div></div>
+  <div class="g13">
+    <div class="flex flex-col gap12">
+      <div class="card">
+        <div class="ch" style="background:var(--rbg)">
+          <span class="b br">FAILED</span>
+          <div style="flex:1;margin-left:8px">
+            <div class="mono" style="font-size:12px;font-weight:700;color:var(--t1)">checkout_test.py::test_payment_gateway</div>
+            <div style="font-size:10px;color:var(--t2);margin-top:2px">Demo Api Tests #4 · Group A · 14 tests share this root cause</div>
+          </div>
+          <div style="text-align:right"><div style="font-size:12px;font-weight:700;color:var(--red)">1.2s</div><div style="font-size:10px;color:var(--t3)">duration</div></div>
+        </div>
+        <div class="cb">
+          <div class="lbl">Failure summary — auto-parsed</div>
+          <div class="esig" style="margin-bottom:14px">
+            <div class="esig-m">AssertionError: Expected 200, got 502</div>
+            <div class="esig-l">at <span style="color:var(--blue)">checkout/payment.py</span> : line <span style="color:var(--amber);font-weight:700">88</span> &nbsp;<span style="background:var(--abg);color:var(--amber);padding:1px 6px;border-radius:3px;font-size:10px">root cause line · 6 internal frames stripped</span></div>
+            <div class="esig-diff"><span class="esig-k">Expected</span><span class="esig-ex">HTTP 200</span><span class="esig-k">Actual</span><span class="esig-ac">HTTP 502</span></div>
+          </div>
+
+          <div class="lbl">Recurrence — last 5 launches</div>
+          <div style="display:flex;align-items:flex-end;gap:3px;height:32px;margin-bottom:6px">
+            <div title="Demo #1: FAIL" style="flex:1;border-radius:2px 2px 0 0;background:var(--red);height:100%"></div>
+            <div title="Demo #2: FAIL" style="flex:1;border-radius:2px 2px 0 0;background:var(--red);height:80%"></div>
+            <div title="Demo #3: FAIL" style="flex:1;border-radius:2px 2px 0 0;background:var(--red);height:90%"></div>
+            <div title="Demo #4: FAIL" style="flex:1;border-radius:2px 2px 0 0;background:var(--red);height:100%"></div>
+            <div title="Demo #5: PASS" style="flex:1;border-radius:2px 2px 0 0;background:var(--gbg);border:1px solid var(--gbd);height:30%"></div>
+          </div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:14px">Failed in <b style="color:var(--red)">4 of last 5 launches</b> — recurring product issue. Passed only in Demo #5 (latest).</div>
+
+          <div class="lbl">Defect category</div>
+          <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
+            <button style="font-size:11px;padding:6px 13px;border-radius:7px;background:var(--rbg);color:var(--red);border:1.5px solid var(--red);cursor:pointer;font-weight:700">✓ Product bug</button>
+            <button style="font-size:11px;padding:6px 13px;border-radius:7px;border:1px solid var(--b2);background:var(--s);color:var(--t2);cursor:pointer">Automation bug</button>
+            <button style="font-size:11px;padding:6px 13px;border-radius:7px;border:1px solid var(--b2);background:var(--s);color:var(--t2);cursor:pointer">System issue</button>
+            <button style="font-size:11px;padding:6px 13px;border-radius:7px;border:1px solid var(--bbd);background:var(--bbg);color:var(--blue);cursor:pointer">Link Jira →</button>
+          </div>
+          <div style="border-top:1px solid var(--b);padding-top:10px;font-size:11px;color:var(--t3);cursor:pointer">▶ View raw log (click to expand)</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><div class="ct">What to do next</div></div>
+        <div class="cb flex flex-col gap8">
+          <div class="ins c"><div class="ins-t">Group A: fix payment.py:88 → recovers 14 tests</div><div class="ins-d">All 14 Group A failures point to the same broken endpoint. One fix recovers all. When a similar fix was applied previously (Jira ticket linked below), 12 tests recovered in the very next run within 4 minutes of deployment.</div></div>
+          <div class="ins i"><div class="ins-t">Possible cause: payment service timeout regression</div><div class="ins-d">A past failure with the same pattern was fixed by increasing the payment service timeout from 10s to 30s in payment.py config. Check if the same timeout configuration was inadvertently reverted in a recent deploy.</div></div>
+          <div class="ins g"><div class="ins-t">Passed in Demo #5 — may already be fixed</div><div class="ins-d">This test passed in the latest launch. If a hotfix was deployed between Demo #4 and Demo #5, this failure may already be resolved. Confirm by checking deployment logs between 17:28–17:29 Mar 21.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap12">
+      <div class="card">
+        <div class="ch"><div class="ct">Similar past failures</div><div class="csub">and how they were fixed</div></div>
+        <div style="padding:10px 12px;display:flex;flex-direction:column;gap:8px">
+          <div style="border:1px solid var(--b);border-radius:7px;padding:9px 11px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><div class="simb-track" style="flex:1;height:4px"><div class="simb-fill" style="width:97%;background:var(--green)"></div></div><span style="font-size:11px;font-weight:700;color:var(--green)">Very similar</span></div>
+            <div style="font-size:11px;font-weight:700;color:var(--t1);margin-bottom:2px">test_payment_retry</div>
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">Demo #3 · Mar 21 · payment.py:88</div>
+            <div style="display:flex;gap:4px"><span class="b bb" style="font-size:9px">JIRA-4421</span><span class="b bg" style="font-size:9px">Fixed</span><span style="font-size:10px;color:var(--t3)">@ravi · timeout increase</span></div>
+          </div>
+          <div style="border:1px solid var(--b);border-radius:7px;padding:9px 11px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><div class="simb-track" style="flex:1;height:4px"><div class="simb-fill" style="width:91%;background:var(--green)"></div></div><span style="font-size:11px;font-weight:700;color:var(--green)">Very similar</span></div>
+            <div style="font-size:11px;font-weight:700;color:var(--t1);margin-bottom:2px">test_refund_flow</div>
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">Demo #2 · Mar 21 · payment.py:88</div>
+            <div style="display:flex;gap:4px"><span class="b ba" style="font-size:9px">Open</span><span style="font-size:10px;color:var(--t3)">no linked ticket yet</span></div>
+          </div>
+          <div style="border:1px solid var(--b);border-radius:7px;padding:9px 11px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><div class="simb-track" style="flex:1;height:4px"><div class="simb-fill" style="width:78%;background:var(--amber)"></div></div><span style="font-size:11px;font-weight:700;color:var(--amber)">Similar</span></div>
+            <div style="font-size:11px;font-weight:700;color:var(--t1);margin-bottom:2px">test_checkout_flow</div>
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">Demo #1 · Mar 21 · payment.py:88</div>
+            <div style="display:flex;gap:4px"><span class="b bb" style="font-size:9px">JIRA-4290</span><span class="b bg" style="font-size:9px">Fixed</span></div>
+          </div>
+          <button style="width:100%;font-size:11px;padding:8px;border-radius:7px;border:1px solid var(--b2);background:var(--s);color:var(--blue);cursor:pointer;font-weight:500" onclick="go(document.querySelectorAll('.ni')[8],'search')">Search more like this →</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Quick stats</div></div>
+        <div class="cb">
+          <div class="sr2"><span class="sr-l">Times failed (5 runs)</span><span class="sr-v" style="color:var(--red)">4 / 5</span></div>
+          <div class="sr2"><span class="sr-l">First appeared</span><span class="sr-v">Demo #1 · Mar 21</span></div>
+          <div class="sr2"><span class="sr-l">Last passed</span><span class="sr-v" style="color:var(--green)">Demo #5 · today</span></div>
+          <div class="sr2"><span class="sr-l">Avg run time</span><span class="sr-v">1.1s</span></div>
+          <div class="sr2"><span class="sr-l">Group</span><span class="sr-v"><span class="b br">A</span></span></div>
+          <div class="sr2"><span class="sr-l">Linked ticket</span><span class="sr-v" style="color:var(--blue)">JIRA-4421</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ FAILURE INTELLIGENCE ══════════════════ -->
+<div class="pg" id="pg-analyser">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-title">Failure intelligence — Demo Api Tests #4</div>
+      <div class="ph-sub">Automatic grouping, pattern detection, and categorisation — runs on every launch completion</div>
+    </div>
+  </div>
+
+  <!-- Unique stats: what the intelligence layer achieved -->
+  <div class="g4">
+    <div class="kpi static" style="border-left-color:var(--purple)">
+      <div class="kpi-l">Failures analysed</div>
+      <div class="kpi-v">31</div>
+      <div class="kpi-sub nt">processed in 2.3s</div>
+      <div class="kpi-why">Time to analyse 31 logs automatically</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--green)">
+      <div class="kpi-l">Auto-tagged</div>
+      <div class="kpi-v" style="color:var(--green)">12</div>
+      <div class="kpi-sub" style="color:var(--purple)">38.7% of failures</div>
+      <div class="kpi-why">These 12 required zero manual triage effort</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--amber)">
+      <div class="kpi-l">Investigation backlog</div>
+      <div class="kpi-v" style="color:var(--amber)">19</div>
+      <div class="kpi-sub nt">new patterns needing review</div>
+      <div class="kpi-why">Hours saved vs triaging all 31 manually: ~2h</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--blue)">
+      <div class="kpi-l">Historical index</div>
+      <div class="kpi-v">12,447</div>
+      <div class="kpi-sub nt">past failures searchable</div>
+      <div class="kpi-why">Larger index = better pattern recognition</div>
+    </div>
+  </div>
+
+  <!-- How it works — in user terms, no model names -->
+  <div class="card mb12">
+    <div class="ch"><div class="ct">How failure intelligence works</div><div class="csub">automated pipeline on every launch</div></div>
+    <div class="cb" style="padding:12px 16px">
+      <div class="pipe">
+        <div class="pb"><div class="pb-step">Input</div><div class="pb-name">Raw failure log</div><div class="pb-det">31 stack traces</div></div>
+        <div class="parr">→</div>
+        <div class="pb"><div class="pb-step">Step 1</div><div class="pb-name">Log parser</div><div class="pb-det">root line + diff extracted</div></div>
+        <div class="parr">→</div>
+        <div class="pb act"><div class="pb-step">Step 2</div><div class="pb-name">Meaning encoder</div><div class="pb-det">converts error text to pattern signature</div></div>
+        <div class="parr">→</div>
+        <div class="pb act"><div class="pb-step">Step 3</div><div class="pb-name">History lookup</div><div class="pb-det">matches against 12,447 past failures</div></div>
+        <div class="parr">→</div>
+        <div class="pb act"><div class="pb-step">Step 4</div><div class="pb-name">Grouping</div><div class="pb-det">clusters similar failures together</div></div>
+        <div class="parr">→</div>
+        <div class="pb out"><div class="pb-step">Output</div><div class="pb-name">Labelled groups</div><div class="pb-det">2 groups + 19 new patterns</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="ch"><div class="ct">Defect category breakdown</div><div class="csub">31 failures categorised</div></div>
+      <div class="cb flex flex-col gap10">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px"><div style="width:10px;height:10px;border-radius:3px;background:var(--red);flex-shrink:0"></div><span style="flex:1;font-size:12px">Product bug</span><span style="font-size:13px;font-weight:700;margin-right:8px">8</span><div class="prog" style="width:110px"><div class="pf" style="width:26%;background:var(--red)"></div></div><span style="font-size:11px;color:var(--t3);min-width:28px;text-align:right">26%</span></div>
+          <div style="font-size:10px;color:var(--t3)">Fix needed in product code · release blocker</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px"><div style="width:10px;height:10px;border-radius:3px;background:var(--amber);flex-shrink:0"></div><span style="flex:1;font-size:12px">Automation bug</span><span style="font-size:13px;font-weight:700;margin-right:8px">4</span><div class="prog" style="width:110px"><div class="pf" style="width:13%;background:var(--amber)"></div></div><span style="font-size:11px;color:var(--t3);min-width:28px;text-align:right">13%</span></div>
+          <div style="font-size:10px;color:var(--t3)">Fix needed in test code · safe to defer from release</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px"><div style="width:10px;height:10px;border-radius:3px;background:#94a3b8;flex-shrink:0"></div><span style="flex:1;font-size:12px">To investigate</span><span style="font-size:13px;font-weight:700;margin-right:8px">19</span><div class="prog" style="width:110px"><div class="pf" style="width:61%;background:#94a3b8"></div></div><span style="font-size:11px;color:var(--t3);min-width:28px;text-align:right">61%</span></div>
+          <div style="font-size:10px;color:var(--t3)">New patterns · manual investigation needed</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct">Grouping accuracy</div><div class="csub">how confident the grouping is</div></div>
+      <div class="cb flex flex-col gap12">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;font-weight:600">Group A — payment.py</span><span class="b bg">High confidence</span></div>
+          <div class="prog"><div class="pf" style="width:93%;background:var(--green)"></div></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:3px">14 tests · very tight grouping · safe to fix together</div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;font-weight:600">Group B — auth.py</span><span class="b bg">High confidence</span></div>
+          <div class="prog"><div class="pf" style="width:90%;background:var(--green)"></div></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:3px">8 tests · consistently matching · automation fix needed</div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px;font-weight:600">New patterns</span><span class="b ba">No match</span></div>
+          <div class="prog"><div class="pf" style="width:15%;background:#cbd5e1"></div></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:3px">19 tests · no historical match · manual review required</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><div class="ct">Per-failure analysis log</div><div class="csub">all 31 · sorted by group</div></div>
+    <table class="tbl">
+      <thead><tr><th>Test name</th><th>Error type</th><th>Root location</th><th>Group</th><th>Category</th><th>Match</th><th>Times failed (7d)</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">test_payment_gateway</td><td>AssertionError</td><td class="mono" style="color:var(--t2)">payment.py:88</td><td style="font-size:13px;font-weight:700">A</td><td><span class="b br">Product bug</span></td><td style="color:var(--green);font-weight:700">High</td><td><span class="b br">5×</span></td></tr>
+        <tr><td class="mono">test_refund_flow</td><td>AssertionError</td><td class="mono" style="color:var(--t2)">payment.py:88</td><td style="font-size:13px;font-weight:700">A</td><td><span class="b br">Product bug</span></td><td style="color:var(--green);font-weight:700">High</td><td><span class="b ba">2×</span></td></tr>
+        <tr><td class="mono">test_admin_access</td><td>ElementClickInterceptedException</td><td class="mono" style="color:var(--t2)">auth.py:55</td><td style="font-size:13px;font-weight:700">B</td><td><span class="b ba">Automation bug</span></td><td style="color:var(--green);font-weight:700">High</td><td><span class="b ba">3×</span></td></tr>
+        <tr><td class="mono">test_export_pdf</td><td>TimeoutError</td><td class="mono" style="color:var(--t2)">export.py:12</td><td style="color:var(--t3)">—</td><td><span class="b ba">Investigate</span></td><td style="color:var(--t3)">New</td><td><span class="b bk">First time</span></td></tr>
+        <tr><td class="mono">test_webhook_callback</td><td>ConnectionError</td><td class="mono" style="color:var(--t2)">webhook.py:34</td><td style="color:var(--t3)">—</td><td><span class="b ba">Investigate</span></td><td style="color:var(--t3)">New</td><td><span class="b bk">First time</span></td></tr>
+        <tr><td colspan="7" style="font-size:11px;color:var(--t3);font-style:italic;background:var(--s2)">+26 more failures — 9 in Group A, 6 in Group B, 11 new patterns</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════ FLAKINESS ══════════════════ -->
+<div class="pg" id="pg-flakiness">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Flakiness report</div><div class="ph-sub">Tests that pass and fail alternately without any code change — hidden reliability debt that wastes CI time</div></div></div>
+
+  <!-- Unique stats: not pass rate, not failures — flakiness-specific signals -->
+  <div class="g4">
+    <div class="kpi static" style="border-left-color:var(--green)">
+      <div class="kpi-l">Flaky tests</div>
+      <div class="kpi-v">0</div>
+      <div class="kpi-sub nt">in 30-day window</div>
+      <div class="kpi-why">Flaky tests mask real bugs and erode team trust in CI</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--green)">
+      <div class="kpi-l">Tests monitored</div>
+      <div class="kpi-v">100</div>
+      <div class="kpi-sub nt">across 5 launches</div>
+      <div class="kpi-why">Every test checked for inconsistent behaviour</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--blue)">
+      <div class="kpi-l">CI time wasted</div>
+      <div class="kpi-v">0m</div>
+      <div class="kpi-sub nt">by flaky re-runs</div>
+      <div class="kpi-why">Flaky tests often re-run automatically, burning CI minutes</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--green)">
+      <div class="kpi-l">Clean streak</div>
+      <div class="kpi-v">5</div>
+      <div class="kpi-sub nt" style="color:var(--green)">launches with zero flakiness</div>
+      <div class="kpi-why">Longer streak = more trustworthy test suite</div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ch"><div class="ct">Flakiness rate over time</div><div class="csub">goal: keep at 0%</div></div>
+    <div class="cb" style="padding:12px 16px"><div style="position:relative;height:120px"><canvas id="ch-flk"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div style="padding:44px;text-align:center">
+      <div style="width:52px;height:52px;background:var(--gbg);border:1px solid var(--gbd);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px">✓</div>
+      <div style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:6px">Zero flaky tests</div>
+      <div style="font-size:12px;color:var(--t3);max-width:400px;margin:0 auto">All 100 tests have been consistent across the last 5 launches. No test alternated between passing and failing without a corresponding code change. This is a healthy test suite.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ TRENDS ══════════════════ -->
+<div class="pg" id="pg-trends">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Pass rate trends</div><div class="ph-sub">Are we getting better launch by launch? Momentum, not snapshots — shows the trajectory of quality over time</div></div></div>
+
+  <!-- Unique stats: trajectory, momentum, history — NOT the same as quick summary -->
+  <div class="g4">
+    <div class="kpi static" style="border-left-color:var(--green)">
+      <div class="kpi-l">Trend direction</div>
+      <div class="kpi-v" style="font-size:20px;margin-top:2px">Improving ↑</div>
+      <div class="kpi-sub nt">0% → 69% across 5 runs</div>
+      <div class="kpi-why">Consistent upward trend = team is resolving issues progressively</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--amber)">
+      <div class="kpi-l">Sprint avg pass rate</div>
+      <div class="kpi-v" style="color:var(--amber)">20%</div>
+      <div class="kpi-sub nt">dragged down by early runs</div>
+      <div class="kpi-why">Sprint average shows overall quality, not just latest snapshot</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--red)">
+      <div class="kpi-l">Days since green run</div>
+      <div class="kpi-v">0</div>
+      <div class="kpi-sub nt" style="color:var(--green)">Demo #5 passed today</div>
+      <div class="kpi-why">Days without a fully passing run = risk signal for release readiness</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--blue)">
+      <div class="kpi-l">Launch frequency</div>
+      <div class="kpi-v">5</div>
+      <div class="kpi-sub nt">today · all in one batch</div>
+      <div class="kpi-why">Low frequency gaps mean blind spots — launches are your health checkpoints</div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="ch"><div class="ct">Pass rate trajectory — each launch</div><div class="csub">Each bar is a launch · colour shows direction of travel</div></div>
+    <div class="cb" style="padding:12px 16px"><div style="position:relative;height:160px"><canvas id="ch-trend"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><div class="ct">Failure count per launch</div><div class="csub">decreasing = team is resolving issues</div></div>
+    <div class="cb" style="padding:12px 16px"><div style="position:relative;height:100px"><canvas id="ch-fail-trend"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════ DURATION ══════════════════ -->
+<div class="pg" id="pg-duration">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Test duration trends</div><div class="ph-sub">Tests auto-flagged if they run &gt;20% slower than their 30-day baseline — slow tests slow down your whole CI pipeline</div></div></div>
+
+  <!-- Unique stats: about time, not pass/fail -->
+  <div class="g4">
+    <div class="kpi static" style="border-left-color:var(--red)">
+      <div class="kpi-l">Regressions flagged</div>
+      <div class="kpi-v" style="color:var(--red)">3</div>
+      <div class="kpi-sub dn">&gt;20% slower than baseline</div>
+      <div class="kpi-why">Each flagged test is slowing your CI by minutes per run</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--amber)">
+      <div class="kpi-l">Total time added</div>
+      <div class="kpi-v" style="color:var(--amber)">+13m</div>
+      <div class="kpi-sub dn">per full suite run vs baseline</div>
+      <div class="kpi-why">Sum of all slowdowns across flagged tests — real CI cost</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--green)">
+      <div class="kpi-l">Tests improving</div>
+      <div class="kpi-v" style="color:var(--green)">4</div>
+      <div class="kpi-sub nt">faster than 30d baseline</div>
+      <div class="kpi-why">Fixture or infra improvements showing measurable results</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--blue)">
+      <div class="kpi-l">Worst test</div>
+      <div class="kpi-v" style="font-size:14px;margin-top:4px">checkout_e2e</div>
+      <div class="kpi-sub dn">+56% — 5.1s added per run</div>
+      <div class="kpi-why">One test adding 5 seconds to every CI run</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><div class="ct">Duration regression table</div><div class="csub">⚠ auto-flagged for &gt;20% increase from 30-day avg</div></div>
+    <div class="dh">
+      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Test name</div>
+      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Now avg</div>
+      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">30d baseline</div>
+      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Delta</div>
+      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">Severity bar</div>
+    </div>
+    <div class="dr2" style="background:var(--rbg)"><div style="font-weight:700;color:var(--red)">test_full_checkout_e2e ⚠</div><div style="font-weight:700">14.2s</div><div style="color:var(--t2)">9.1s</div><div style="color:var(--red);font-weight:700">+56%</div><div><div class="prog" style="width:90px"><div class="pf" style="width:100%;background:var(--red)"></div></div></div></div>
+    <div class="dr2" style="background:var(--abg)"><div style="font-weight:700;color:var(--amber)">test_invoice_generation ⚠</div><div>9.4s</div><div style="color:var(--t2)">6.8s</div><div style="color:var(--amber);font-weight:700">+38%</div><div><div class="prog" style="width:90px"><div class="pf" style="width:68%;background:var(--amber)"></div></div></div></div>
+    <div class="dr2" style="background:var(--abg)"><div style="font-weight:700;color:var(--amber)">test_product_search ⚠</div><div>5.9s</div><div style="color:var(--t2)">4.4s</div><div style="color:var(--amber);font-weight:700">+34%</div><div><div class="prog" style="width:90px"><div class="pf" style="width:60%;background:var(--amber)"></div></div></div></div>
+    <div class="dr2"><div>test_report_pdf_export</div><div>8.8s</div><div style="color:var(--t2)">8.6s</div><div style="color:var(--t3)">+2%</div><div><div class="prog" style="width:90px"><div class="pf" style="width:3%;background:#e2e8f0"></div></div></div></div>
+    <div class="dr2"><div>test_user_bulk_import</div><div>6.1s</div><div style="color:var(--t2)">7.2s</div><div style="color:var(--green)">-15%</div><div><div class="prog" style="width:90px"><div class="pf" style="width:15%;background:var(--green)"></div></div></div></div>
+    <div class="dr2"><div>test_cart_add_item</div><div>0.8s</div><div style="color:var(--t2)">1.1s</div><div style="color:var(--green)">-27%</div><div><div class="prog" style="width:90px"><div class="pf" style="width:27%;background:var(--green)"></div></div></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════ FAILURE SEARCH ══════════════════ -->
+<div class="pg" id="pg-search">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Failure search</div><div class="ph-sub">Search across all historical failures — find how similar issues were fixed before, and who fixed them</div></div>
+  </div>
+
+  <!-- Unique stats: search utility, not pass rates -->
+  <div class="g3 mb12">
+    <div class="kpi static" style="border-left-color:var(--purple)">
+      <div class="kpi-l">Searchable failures</div>
+      <div class="kpi-v">12,447</div>
+      <div class="kpi-sub nt">in project history</div>
+      <div class="kpi-why">The bigger the index, the more likely a past fix is found</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--blue)">
+      <div class="kpi-l">Unique error patterns</div>
+      <div class="kpi-v">843</div>
+      <div class="kpi-sub nt">distinct failure signatures</div>
+      <div class="kpi-why">Each pattern is a documented failure type in your project history</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--green)">
+      <div class="kpi-l">Fixes found via search</div>
+      <div class="kpi-v">67%</div>
+      <div class="kpi-sub nt">of searches found a past resolution</div>
+      <div class="kpi-why">2 in 3 failures have been seen and fixed before — saves investigation time</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:7px">
+    <div class="sbox"><input type="text" id="si" value="payment service 502 error" placeholder="Describe the failure in plain English…"><select><option>All launches</option><option selected>Demo Api Tests</option></select><button>Search</button></div>
+    <div style="font-size:11px;color:var(--t3);margin-top:5px;margin-left:2px">23 results · ranked by how closely they match your query in both meaning and exact text</div>
+  </div>
+  <div class="g21">
+    <div class="flex flex-col gap8">
+      <div class="sres"><div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:5px"><span class="scpill">Best match</span><div class="sres-exc">AssertionError: Expected 200, got 502</div></div><div class="sres-m">test_payment_gateway · Demo Api Tests #4 · Mar 21</div><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="b bb" style="font-size:9px">JIRA-4421</span><span class="b bg" style="font-size:9px">Fixed</span><span style="font-size:10px;color:var(--t3)">@ravi · increased timeout</span></div></div>
+      <div class="sres"><div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:5px"><span class="scpill">Very similar</span><div class="sres-exc">AssertionError: Expected 200 but received 502</div></div><div class="sres-m">test_refund_flow · Demo Api Tests #3 · Mar 21</div><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="b bb" style="font-size:9px">JIRA-4398</span><span class="b bg" style="font-size:9px">Fixed</span><span style="font-size:10px;color:var(--t3)">@priya · payment config update</span></div></div>
+      <div class="sres"><div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:5px"><span class="scpill">Similar</span><div class="sres-exc">HTTPError: 502 Bad Gateway — /api/payment/charge</div></div><div class="sres-m">test_checkout_flow · Demo Api Tests #2 · Mar 21</div><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="b ba" style="font-size:9px">Open</span><span style="font-size:10px;color:var(--t3)">no linked ticket</span></div></div>
+      <div class="sres"><div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:5px"><span class="scpill">Partial match</span><div class="sres-exc">TimeoutError: payment-service did not respond after 30s</div></div><div class="sres-m">test_payment_retry · Demo Api Tests #1 · Mar 21</div><div style="display:flex;gap:5px;flex-wrap:wrap"><span class="b bb" style="font-size:9px">JIRA-4310</span><span class="b bg" style="font-size:9px">Fixed</span></div></div>
+    </div>
+    <div class="flex flex-col gap12">
+      <div class="card">
+        <div class="ch"><div class="ct">How this search works</div></div>
+        <div class="cb" style="padding:10px 16px">
+          <div class="hstep"><div class="hnum" style="background:var(--abg);color:var(--amber)">1</div><div><div class="ht">Keyword matching</div><div class="hd">Finds exact matches on error class names, error codes, and file paths. Best for specific error strings like "502" or "AssertionError".</div><div class="prog" style="margin-top:5px"><div class="pf" style="width:70%;background:var(--amber)"></div></div></div></div>
+          <div class="hstep"><div class="hnum" style="background:var(--pbg);color:var(--purple)">2</div><div><div class="ht">Meaning-based search</div><div class="hd">Understands the intent behind your query — finds failures that mean the same thing even if worded differently. "502 error" and "Bad Gateway" match the same results.</div><div class="prog" style="margin-top:5px"><div class="pf" style="width:85%;background:var(--purple)"></div></div></div></div>
+          <div class="hstep"><div class="hnum" style="background:var(--gbg);color:var(--green)">3</div><div><div class="ht">Combined ranking</div><div class="hd">Both scores are merged — you get the precision of keyword search plus the flexibility of meaning-based search in one ranked list.</div><div class="prog" style="margin-top:5px"><div class="pf" style="width:100%;background:var(--green)"></div></div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Error type breakdown</div></div>
+        <div class="cb" style="padding:10px 16px"><div style="position:relative;height:120px"><canvas id="ch-sr"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ ALERTS ══════════════════ -->
+<div class="pg" id="pg-alerts">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Alert rules</div><div class="ph-sub">Get notified automatically when quality drops — without checking the dashboard manually after every launch</div></div>
+    <button class="form-btn primary" style="border-radius:7px">+ New rule</button>
+  </div>
+
+  <!-- Unique stats: alert-specific operational metrics -->
+  <div class="g4">
+    <div class="kpi static" style="border-left-color:var(--blue)">
+      <div class="kpi-l">Active rules</div>
+      <div class="kpi-v">4</div>
+      <div class="kpi-sub nt">evaluating on each launch</div>
+      <div class="kpi-why">Rules are your quality thresholds — each one is a safety net</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--red)">
+      <div class="kpi-l">Fired this week</div>
+      <div class="kpi-v" style="color:var(--red)">3</div>
+      <div class="kpi-sub dn">2 today · 1 on Mar 20</div>
+      <div class="kpi-why">High fire rate = quality is unstable and thresholds are being crossed frequently</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--green)">
+      <div class="kpi-l">Channels configured</div>
+      <div class="kpi-v">3</div>
+      <div class="kpi-sub nt">Slack · email · Teams</div>
+      <div class="kpi-why">More channels = faster team response when something breaks</div>
+    </div>
+    <div class="kpi static" style="border-left-color:var(--amber)">
+      <div class="kpi-l">Avg fix lag</div>
+      <div class="kpi-v">4.2h</div>
+      <div class="kpi-sub nt">alert → fix deployed</div>
+      <div class="kpi-why">Lower lag = alerts are actionable and team is responding quickly</div>
+    </div>
+  </div>
+
+  <div class="rule-c"><div class="rule-h"><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">Pass rate drop</div><div style="font-size:11px;color:var(--t2)">Fires when: pass rate falls below 80% on any launch completion</div></div><span class="b br" style="margin-right:8px">Fired today — 70.1%</span><div class="tog on"><div class="tok"></div></div></div><div class="rule-f">Notify: <span class="b bb" style="margin-left:4px">#qa-alerts</span><span class="b bb">team@co.com</span></div></div>
+  <div class="rule-c"><div class="rule-h"><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">New failure pattern detected</div><div style="font-size:11px;color:var(--t2)">Fires when: failures appear that have no match in project history</div></div><span class="b br" style="margin-right:8px">Fired today — 19 new</span><div class="tog on"><div class="tok"></div></div></div><div class="rule-f">Notify: <span class="b bb" style="margin-left:4px">#qa-alerts</span></div></div>
+  <div class="rule-c"><div class="rule-h"><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">Flakiness spike</div><div style="font-size:11px;color:var(--t2)">Fires when: project flakiness rate exceeds 20% over last 7 launches</div></div><span class="b bk" style="margin-right:8px">Never fired</span><div class="tog off"><div class="tok"></div></div></div><div class="rule-f">Notify: <span class="b bb" style="margin-left:4px">team@co.com</span></div></div>
+  <div class="rule-c"><div class="rule-h"><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">Duration regression</div><div style="font-size:11px;color:var(--t2)">Fires when: a test's avg duration increases more than 30% vs its 30-day baseline</div></div><span class="b ba" style="margin-right:8px">Fired Mar 20</span><div class="tog on"><div class="tok"></div></div></div><div class="rule-f">Notify: <span class="b bb" style="margin-left:4px">#qa-perf</span></div></div>
+
+  <div class="card" style="margin-top:4px">
+    <div class="ch"><div class="ct">Scheduled digest</div><div class="csub">daily or weekly summary email to your team</div></div>
+    <div class="cb" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--t2)">
+      Schedule: <select style="font-size:11px;padding:5px 9px;border:1px solid var(--b2);border-radius:6px;background:var(--s2);color:var(--t1)"><option>Daily</option><option>Weekly</option></select>
+      at <select style="font-size:11px;padding:5px 9px;border:1px solid var(--b2);border-radius:6px;background:var(--s2);color:var(--t1)"><option>08:00</option><option>09:00</option></select>
+      Include:
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" checked> Pass rate</label>
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" checked> New failures</label>
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" checked> Alert history</label>
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox"> Duration</label>
+      <button class="form-btn primary" style="border-radius:6px;font-size:11px">Save</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><div class="ct">Alert history</div></div>
+    <table class="tbl">
+      <thead><tr><th>Rule</th><th>Launch</th><th>What triggered</th><th>Channel</th><th>Time</th></tr></thead>
+      <tbody>
+        <tr><td>Pass rate drop</td><td>Demo Api Tests #4</td><td style="color:var(--red);font-weight:700">70.1%</td><td><span class="b bb">#qa-alerts</span></td><td style="color:var(--t3)">09:14 today</td></tr>
+        <tr><td>New failure pattern</td><td>Demo Api Tests #4</td><td style="color:var(--red);font-weight:700">19 new patterns</td><td><span class="b bb">#qa-alerts</span></td><td style="color:var(--t3)">09:14 today</td></tr>
+        <tr><td>Duration regression</td><td>Demo Api Tests #3</td><td style="color:var(--amber);font-weight:700">+56% on checkout_e2e</td><td><span class="b bb">#qa-perf</span></td><td style="color:var(--t3)">Mar 20</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════ SHARING ══════════════════ -->
+<div class="pg" id="pg-sharing">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Share dashboard</div><div class="ph-sub">Generate read-only public links for stakeholders — no login required · token-based · fully revocable</div></div></div>
+  <div class="g21">
+    <div class="flex flex-col gap10">
+      <div class="card">
+        <div class="ch"><div class="ct">Active share links</div><span class="b bg">2 live</span></div>
+        <div class="cb flex flex-col gap10">
+          <div class="sh-c"><div class="sh-h"><span style="font-size:12px;font-weight:600;flex:1">Sprint summary</span><span class="b bg">Live</span></div><div class="sh-b"><div class="sh-url"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://reportportal.io/share/abc123xyz</span><button class="cpb">Copy</button></div><div style="display:flex;gap:12px;font-size:11px;color:var(--t2);align-items:center"><span>Expires: <b>Never</b></span><span>Views: <b>34</b></span><button style="font-size:10px;padding:3px 9px;border-radius:5px;border:1px solid var(--b2);background:transparent;color:var(--red);cursor:pointer;margin-left:auto">Revoke</button></div></div></div>
+          <div class="sh-c"><div class="sh-h"><span style="font-size:12px;font-weight:600;flex:1">QA weekly report</span><span class="b ba">Expires Mar 28</span></div><div class="sh-b"><div class="sh-url"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://reportportal.io/share/xyz456abc</span><button class="cpb">Copy</button></div><div style="display:flex;gap:12px;font-size:11px;color:var(--t2);align-items:center"><span>Expires: <b>Mar 28</b></span><span>Views: <b>12</b></span><button style="font-size:10px;padding:3px 9px;border-radius:5px;border:1px solid var(--b2);background:transparent;color:var(--red);cursor:pointer;margin-left:auto">Revoke</button></div></div></div>
+        </div>
+      </div>
+      <button class="form-btn primary" style="width:100%;padding:9px;border-radius:7px;font-size:12px">+ Generate new link</button>
+    </div>
+    <div>
+      <div class="card">
+        <div class="ch"><div class="ct">New link settings</div></div>
+        <div class="cb flex flex-col gap12" style="font-size:12px;color:var(--t2)">
+          <div><div style="margin-bottom:5px;font-weight:600;color:var(--t1)">Dashboard</div><select class="fi" style="padding:7px 10px"><option>Sprint summary</option><option>Flakiness report</option><option>Pass rate trends</option></select></div>
+          <div><div style="margin-bottom:5px;font-weight:600;color:var(--t1)">Expires</div><select class="fi" style="padding:7px 10px"><option>Never</option><option>7 days</option><option>30 days</option></select></div>
+          <div><div style="margin-bottom:5px;font-weight:600;color:var(--t1)">Access level</div><select class="fi" style="padding:7px 10px"><option>Read-only (no login required)</option><option>Login required</option></select></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- main -->
+</div><!-- layout -->
+
+<!-- ══════════ SPRINT MODAL ══════════ -->
+<div id="sprint-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center">
+  <div style="background:var(--s);border-radius:12px;width:480px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px">
+      <div style="font-size:15px;font-weight:700;color:var(--t1);flex:1">Create sprint</div>
+      <button onclick="hideModal('sprint-modal')" style="background:none;border:none;font-size:20px;color:var(--t3);cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="padding:20px">
+      <div class="form-row">
+        <div class="form-label">Sprint name / pattern</div>
+        <input class="fi" type="text" placeholder="e.g. Sprint 34 or sprint-34" id="sprint-name">
+        <div class="form-hint">Use a consistent naming pattern (e.g. sprint-{N}) — all launches matching this pattern will auto-assign</div>
+      </div>
+      <div class="form-row">
+        <div class="form-label">Date range</div>
+        <div class="date-row">
+          <div>
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">Start date</div>
+            <input class="fi" type="date" id="sprint-start" value="2025-03-15">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">End date</div>
+            <input class="fi" type="date" id="sprint-end" value="2025-03-21">
+          </div>
+        </div>
+        <div class="form-hint">Any launch created between these dates will be automatically added to this sprint</div>
+      </div>
+      <div class="sprint-range-preview">
+        <div style="font-size:11px;font-weight:600;color:var(--t1);margin-bottom:5px">Auto-assignment preview</div>
+        <div style="font-size:11px;color:var(--t2)">Launches created between <b>Mar 15</b> and <b>Mar 21</b> will be automatically assigned to this sprint. Currently: <b style="color:var(--green)">5 launches match</b> (all Demo Api Tests #1–#5)</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button onclick="hideModal('sprint-modal')" class="form-btn secondary">Cancel</button>
+        <button onclick="hideModal('sprint-modal')" class="form-btn primary">Create sprint</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ RELEASE MODAL ══════════ -->
+<div id="release-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center">
+  <div style="background:var(--s);border-radius:12px;width:520px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px">
+      <div style="font-size:15px;font-weight:700;color:var(--t1);flex:1">Create release</div>
+      <button onclick="hideModal('release-modal')" style="background:none;border:none;font-size:20px;color:var(--t3);cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="padding:20px">
+      <div class="form-row">
+        <div class="form-label">Release name</div>
+        <input class="fi" type="text" placeholder="e.g. v2.4.0 or Q1 2025 Release" id="release-name">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Sprint range</div>
+        <div style="font-size:11px;color:var(--t2);margin-bottom:8px">Select the sprints to include in this release. All launches within those sprints will be grouped under this release.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">From sprint</div>
+            <select class="fi" style="padding:7px 10px">
+              <option>— select —</option>
+              <option selected>Sprint 32 (Mar 1–7)</option>
+              <option>Sprint 33 (Mar 8–14)</option>
+              <option>Sprint 34 (Mar 15–21)</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">To sprint</div>
+            <select class="fi" style="padding:7px 10px">
+              <option>— select —</option>
+              <option>Sprint 32 (Mar 1–7)</option>
+              <option>Sprint 33 (Mar 8–14)</option>
+              <option selected>Sprint 34 (Mar 15–21)</option>
+            </select>
+          </div>
+        </div>
+        <div class="sprint-range-preview">
+          <div style="font-size:11px;font-weight:600;color:var(--t1);margin-bottom:6px">Included sprints</div>
+          <div style="display:flex;flex-wrap:wrap">
+            <span class="sprint-chip">Sprint 32 · Mar 1–7</span>
+            <span class="sprint-chip">Sprint 33 · Mar 8–14</span>
+            <span class="sprint-chip">Sprint 34 · Mar 15–21</span>
+          </div>
+          <div style="font-size:11px;color:var(--t2);margin-top:8px">Covers <b>Mar 1 – Mar 21</b> · <b style="color:var(--green)">5 launches</b> will be included</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button onclick="hideModal('release-modal')" class="form-btn secondary">Cancel</button>
+        <button onclick="hideModal('release-modal')" class="form-btn primary">Create release</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var bc=document.getElementById('bc');
+var titles={summary:'Quick summary',releases:'Releases',clusters:'Cluster view',failcard:'Failure card',analyser:'Failure intelligence',flakiness:'Flakiness report',trends:'Pass rate trends',duration:'Duration trends',search:'Failure search',alerts:'Alert rules',sharing:'Share dashboard'};
+
+function go(el,pid){
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on')});
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on')});
+  if(el)el.classList.add('on');
+  var pg=document.getElementById('pg-'+pid);
+  if(pg)pg.classList.add('on');
+  bc.innerHTML='superadmin_personal / <b>'+(titles[pid]||pid)+'</b>';
+  bld(pid);
+}
+function togEl(bid,aid){
+  var el=document.getElementById(bid);var ar=document.getElementById(aid);
+  if(!el)return;
+  var h=el.style.display==='none';
+  el.style.display=h?'block':'none';
+  if(ar)ar.textContent=h?'▾':'▸';
+}
+function togC(bid,aid){
+  var el=document.getElementById(bid);var ar=document.getElementById(aid);
+  if(!el)return;
+  var op=el.classList.contains('open');
+  el.classList.toggle('open',!op);
+  if(ar)ar.textContent=op?'▸':'▾';
+}
+function showModal(id){
+  var m=document.getElementById(id);
+  if(m){m.style.display='flex';}
+}
+function hideModal(id){
+  var m=document.getElementById(id);
+  if(m){m.style.display='none';}
+}
+// close modal on backdrop click
+document.querySelectorAll('[id$="-modal"]').forEach(function(m){
+  m.addEventListener('click',function(e){if(e.target===m)hideModal(m.id);});
+});
+
+var done={};
+function bld(id){
+  if(done[id])return;done[id]=1;
+  var lbl=['Demo #1','Demo #2','Demo #3','Demo #4','Demo #5'];
+  var cols=['#dc2626','#dc2626','#d97706','#d97706','#059669'];
+  if(id==='summary'){
+    mkLine('ch-pass',[0,10,22,48,69],'#059669',0,100,true,lbl);
+    mkBar('ch-sprint',[0,10,22,48,69],cols,['#1','#2','#3','#4','#5']);
+  }
+  if(id==='flakiness') mkLine('ch-flk',Array(14).fill(0),'#059669',0,20,true);
+  if(id==='trends'){
+    mkLine('ch-trend',[0,10,22,48,69],'#059669',0,100,true,lbl);
+    mkBar('ch-fail-trend',[30,29,22,5,0],cols,lbl);
+  }
+  if(id==='search') mkDonut('ch-sr',['AssertionError','TimeoutError','HTTPError','Other'],[14,5,3,1],['#dc2626','#d97706','#2563eb','#94a3b8']);
+}
+function mkLine(id,data,color,mn,mx,pct,lbls){
+  var ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx,{type:'line',data:{labels:lbls||data.map(function(_,i){return'L'+(i+1)}),datasets:[{data:data,borderColor:color,borderWidth:2,pointRadius:4,pointBackgroundColor:color,pointBorderColor:'#fff',pointBorderWidth:2,tension:.35,fill:true,backgroundColor:color+'12'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y+(pct?'%':'')}}}},scales:{y:{min:mn,max:mx,ticks:{font:{size:10},callback:pct?function(v){return v+'%'}:null},grid:{color:'rgba(0,0,0,0.04)'}},x:{ticks:{font:{size:10}},grid:{display:false}}}}});
+}
+function mkBar(id,data,bgColors,lbls){
+  var ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx,{type:'bar',data:{labels:lbls||data.map(function(_,i){return'L'+(i+1)}),datasets:[{data:data,backgroundColor:bgColors,borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{display:false,min:0,max:100},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
+}
+function mkDonut(id,labels,data,colors){
+  var ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx,{type:'doughnut',data:{labels:labels,datasets:[{data:data,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'right',labels:{font:{size:10},boxWidth:10,padding:8}}},cutout:'62%'}});
+}
+setTimeout(function(){bld('summary');},200);
+</script>
+</body>
+</html>

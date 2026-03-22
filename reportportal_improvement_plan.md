@@ -3,16 +3,80 @@
 > Scope: Reporting features + lightweight ML analyser for QA teams
 > Stack: React (frontend) · Python/FastAPI (backend) · PostgreSQL · FAISS · sentence-transformers
 
+## Mandatory Delivery Model
+
+This plan must be executed in a fixed sequence for every feature and every phase. The order is mandatory and must not be skipped.
+
+### Delivery Principles
+
+1. Local-first containerised development
+2. UI first
+3. Backend second
+4. Integration last
+
+### Stage 1 — UI First With Dummy Data
+
+- Build the UI in `service-ui/app` first.
+- Use dummy data only. No API wiring, no backend dependency, no partial integration.
+- Validate the UX, layout, states, empty cases, error states, and navigation using local fixtures or request stubs.
+- Present the UI to the user for approval before any backend implementation starts.
+
+### Stage 2 — Backend After UI Approval
+
+- Start backend work only after the UI is approved.
+- Implement the service contracts required by the approved UI, not a larger speculative API surface.
+- Keep backend validation isolated from the UI where possible until the backend behavior is approved.
+- Present backend behavior, payload shape, persistence rules, and runtime behavior for approval before integration starts.
+
+### Stage 3 — Integration After Backend Approval
+
+- Connect the approved UI to the approved backend only after both parts are accepted.
+- Replace dummy data incrementally and keep the approved UI behavior stable.
+- Run regression checks on loading, empty, error, and partial-data states during wiring.
+
+### Approval Gates
+
+- Gate A: UI approval is required before backend implementation.
+- Gate B: Backend approval is required before frontend-backend integration.
+- Gate C: Integration is complete only after end-to-end validation in the local Docker-based environment.
+
+### Local-First Containerised Development
+
+- Start every feature in the local development environment before thinking about shared or remote environments.
+- Keep shared platform dependencies in containers from the repository root `docker-compose.yml` so the runtime is reproducible on every machine.
+- Use containers for infrastructure concerns first: database, messaging, dependent services, and final integration validation.
+- Keep the UI feedback loop fast by running `service-ui/app` locally with `npm run dev` on `http://localhost:3000` while the platform services remain containerised.
+- During Stage 1, use dummy data or request stubs and avoid any requirement for a live backend implementation.
+- Do not couple early UI work to incomplete API containers; integration happens only in Stage 3 after approval.
+- Treat Docker as the source of truth for runtime parity and local development as the source of truth for iteration speed.
+
+### Modern UI Direction
+
+- The first deliverable for each feature must look like a modern product surface, not only a functional placeholder.
+- Prefer clean information hierarchy, deliberate spacing, strong typography, refined color contrast, and clear status signaling.
+- Use modern interaction patterns already supported by the stack, including smooth state transitions and purposeful motion where it improves comprehension.
+- Avoid visually outdated admin-panel patterns when a clearer and more polished interaction can be delivered within the current design system.
+- Design all approved UI states before backend work: loading, empty, populated, partial, error, and success feedback.
+- Keep the UI responsive for desktop and laptop widths from the first pass instead of treating responsiveness as a final polish task.
+- Reuse existing frontend capabilities where practical, including animation support already available in the `service-ui/app` stack.
+
+### Recommended UI-First Mechanics
+
+- Prefer local fixture files, selector-friendly component states, and API response stubs for early UI development.
+- Reuse the existing frontend test stack and request mocking utilities where practical, including `axios-mock-adapter` in `service-ui/app`.
+- Define the contract from the approved UI state shapes first, then implement backend endpoints to match those shapes.
+
 ---
 
 ## Table of Contents
 
-1. [Phase 1 — Failure Reporting UI + Smart Summary](#phase-1)
-2. [Phase 2 — Dashboard & Trend Reporting](#phase-2)
-3. [Phase 3 — Alerts & Stakeholder Sharing](#phase-3)
-4. [Phase 4 — Semantic Failure Search](#phase-4)
-5. [ML Analyser Stack](#ml-analyser-stack)
-6. [API Reference](#api-reference)
+1. [Mandatory Delivery Model](#mandatory-delivery-model)
+2. [Phase 1 — Failure Reporting UI + Smart Summary](#phase-1)
+3. [Phase 2 — Dashboard & Trend Reporting](#phase-2)
+4. [Phase 3 — Alerts & Stakeholder Sharing](#phase-3)
+5. [Phase 4 — Semantic Failure Search](#phase-4)
+6. [ML Analyser Stack](#ml-analyser-stack)
+7. [API Reference](#api-reference)
 
 ---
 
@@ -21,6 +85,13 @@
 **Goal:** Replace raw stack trace dumps with a readable, structured failure card. Auto-cluster similar failures within a launch.
 
 **Timeline:** Weeks 1–4
+
+**Execution rule:** Complete the UI with dummy data first, pause for user approval, then implement backend parsing and clustering, pause for approval again, and only then wire the UI to live APIs.
+
+**Stage breakdown:**
+- Stage 1A: `1.1` and `1.2` as UI-only flows with dummy data.
+- Stage 1B: `1.3`, `1.4`, and `1.5` only after UI approval.
+- Stage 1C: Replace dummy data with live launch failure and cluster responses only after backend approval.
 
 ---
 
@@ -294,6 +365,13 @@ Returns failure clusters for a launch.
 
 **Timeline:** Weeks 5–10
 
+**Execution rule:** Deliver dashboard screens with dummy trend data first, wait for user approval, then implement analytics and APIs, and only after approval connect dashboard widgets to live data.
+
+**Stage breakdown:**
+- Stage 2A: `2.1`, `2.2`, and `2.3` as UI-only widgets with mock datasets.
+- Stage 2B: `2.4` and `2.5` only after UI approval.
+- Stage 2C: Integrate filters, shared date context, and live metrics only after backend approval.
+
 ---
 
 ### 2.1 UI Mockup — Flakiness Dashboard
@@ -494,6 +572,13 @@ def _compute_trend(runs: list[dict], days: int) -> str:
 **Goal:** Rule-based alert engine, scheduled digest reports, read-only shareable dashboard links.
 
 **Timeline:** Weeks 11–16
+
+**Execution rule:** Prototype alert and sharing flows in the UI first with dummy rules, fake recipients, and generated sample links. Start backend only after the UI flow is approved, then integrate only after backend approval.
+
+**Stage breakdown:**
+- Stage 3A: `3.1`, `3.2`, and `3.3` as UI-only configuration flows backed by dummy state.
+- Stage 3B: `3.4`, `3.5`, and `3.6` only after UI approval.
+- Stage 3C: Wire rule persistence, alert dispatch status, and share-link generation only after backend approval.
 
 ---
 
@@ -733,6 +818,13 @@ Public endpoint — no auth required. Returns read-only dashboard data.
 **Goal:** BM25 + FAISS hybrid search over all historical failures. Similar failures sidebar on the failure card.
 
 **Timeline:** Weeks 17–22
+
+**Execution rule:** Build and approve the search UX first using dummy indexed results, then implement indexing and ranking services, and only after approval connect search interactions to the live analyzer stack.
+
+**Stage breakdown:**
+- Stage 4A: `4.1` and `4.2` as UI-only search experiences with stubbed results.
+- Stage 4B: `4.3`, `4.4`, and `4.5` only after UI approval.
+- Stage 4C: Integrate live semantic search, ranking, and sidebar similarity data only after backend approval.
 
 ---
 

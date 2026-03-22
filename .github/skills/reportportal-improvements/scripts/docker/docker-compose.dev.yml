@@ -1,0 +1,66 @@
+# docker-compose.dev.yml
+# Inner loop development stack — edit locally, validate in Docker.
+#
+# Usage:
+#   docker compose -f scripts/docker/docker-compose.dev.yml up
+#
+# Frontend:  http://localhost:3000  (Vite hot reload)
+# Backend:   http://localhost:8000  (uvicorn --reload)
+# API docs:  http://localhost:8000/docs
+
+services:
+
+  frontend:
+    build:
+      context: ../../
+      dockerfile: scripts/docker/Dockerfile.dev
+      target: frontend
+    volumes:
+      - ../../ui/src:/app/src                  # bind mount — edit locally, see instantly
+      - ../../ui/public:/app/public
+      # node_modules stays in the container — don't mount over it
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    command: npm run dev -- --host 0.0.0.0
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ../../
+      dockerfile: scripts/docker/Dockerfile.dev
+      target: backend
+    volumes:
+      - ../../backend:/app                     # bind mount — uvicorn --reload picks up changes
+      - rp-faiss-data:/app/data                # FAISS index persists across restarts
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://rp:rp@db:5432/rp_dev
+      - PYTHONUNBUFFERED=1
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rp
+      POSTGRES_PASSWORD: rp
+      POSTGRES_DB: rp_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - rp-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rp"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  rp-pg-data:
+  rp-faiss-data:

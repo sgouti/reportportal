@@ -1,0 +1,46 @@
+http:
+  routers:
+    ui-local:
+      rule: PathPrefix(`/ui`)
+      entryPoints:
+        - web
+      service: ui-local
+      middlewares:
+        - ui-local-strip-prefix
+      priority: 300
+
+    ui-local-secure:
+      rule: PathPrefix(`/ui`)
+      entryPoints:
+        - websecure
+      service: ui-local
+      middlewares:
+        - ui-local-strip-prefix
+      priority: 300
+
+    ui-hmr:
+      rule: PathPrefix(`/ws`) || PathPrefix(`/sockjs-node`)
+      entryPoints:
+        - web
+      service: ui-local
+      priority: 300
+
+    ui-hmr-secure:
+      rule: PathPrefix(`/ws`) || PathPrefix(`/sockjs-node`)
+      entryPoints:
+        - websecure
+      service: ui-local
+      priority: 300
+
+  middlewares:
+    ui-local-strip-prefix:
+      stripPrefix:
+        prefixes:
+          - /ui
+
+  services:
+    ui-local:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: http://host.docker.internal:3000

@@ -1,0 +1,27 @@
+# Dockerfile.dev — multi-stage dev image
+# Stage "frontend": Node + Vite dev server
+# Stage "backend":  Python + uvicorn with all ML deps
+
+# ── Frontend ─────────────────────────────────────────────────────────────────
+FROM node:20-alpine AS frontend
+WORKDIR /app
+COPY ui/package*.json ./
+RUN npm install
+# src/ and public/ are bind-mounted at runtime — not copied here
+EXPOSE 3000
+
+# ── Backend ──────────────────────────────────────────────────────────────────
+FROM python:3.11-slim AS backend
+WORKDIR /app
+
+# System deps for FAISS + HDBSCAN (no GPU, CPU build only)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python deps first (cached layer — only re-runs if requirements change)
+COPY backend/requirements.dev.txt .
+RUN pip install --no-cache-dir -r requirements.dev.txt
+
+# backend/ source is bind-mounted at runtime — uvicorn --reload handles changes
+EXPOSE 8000

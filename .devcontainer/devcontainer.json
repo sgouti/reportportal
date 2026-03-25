@@ -1,15 +1,21 @@
 {
-  "name": "OpenClaw Dev",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "name": "OpenClaw Agent",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "20"
-    },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+      "version": "24"
+    }
   },
   "forwardPorts": [18789],
-  "postCreateCommand": "bash .devcontainer/install-openclaw.sh",
+  "portsAttributes": {
+    "18789": {
+      "label": "OpenClaw Gateway",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
   "remoteEnv": {
-    "OPENCLAW_GATEWAY_TOKEN": "${localEnv:OPENCLAW_GATEWAY_TOKEN}"
+    "OPENCLAW_GATEWAY_TOKEN": "${localEnv:OPENCLAW_GATEWAY_TOKEN}",
+    "COPILOT_GITHUB_TOKEN": "${localEnv:COPILOT_GITHUB_TOKEN}"
   }
 }

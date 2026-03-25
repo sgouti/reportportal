@@ -1,0 +1,15 @@
+{
+  "name": "OpenClaw Dev",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [18789],
+  "postCreateCommand": "bash .devcontainer/install-openclaw.sh",
+  "remoteEnv": {
+    "OPENCLAW_GATEWAY_TOKEN": "${localEnv:OPENCLAW_GATEWAY_TOKEN}"
+  }
+}

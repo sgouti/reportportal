@@ -88,6 +88,12 @@ x-analyzer-environment: &common-analyzer-environment
   ES_HOSTS: http://opensearch:9200
   ANALYZER_BINARYSTORE_TYPE: filesystem
   DATASTORE_TYPE: filesystem # Change to 'minio' or 's3' for object storage
+  RP_SEMANTIC_MODELS_ENABLED: ${RP_SEMANTIC_MODELS_ENABLED-true}
+  RP_SEMANTIC_EMBEDDING_MODEL: ${RP_SEMANTIC_EMBEDDING_MODEL-sentence-transformers/all-MiniLM-L6-v2}
+  RP_SEMANTIC_ALLOW_MODEL_DOWNLOAD: ${RP_SEMANTIC_ALLOW_MODEL_DOWNLOAD-true}
+  RP_SEMANTIC_CACHE_DIR: ${RP_SEMANTIC_CACHE_DIR-/data/storage/analyzer/semantic-cache}
+  RP_SEMANTIC_MIN_CLUSTER_SIZE: ${RP_SEMANTIC_MIN_CLUSTER_SIZE-2}
+  RP_SEMANTIC_RRF_K: ${RP_SEMANTIC_RRF_K-60}
   ## For filesystem storage, set path where analyzer data will be stored
   FILESYSTEM_DEFAULT_PATH: /data/storage/analyzer
   ## For MinIO storage, set DATASTORE_TYPE: minio and configure:
